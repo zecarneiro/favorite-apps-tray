@@ -1,41 +1,56 @@
 #!/usr/bin/env node
 import SysTray from 'systray2';
 import { Logger } from '../vendor/utils/typescript/src/lib/logger';
-import { ILogger } from '../vendor/utils/typescript/src/interface/Ilogger';
 import { Console } from '../vendor/utils/typescript/src/lib/console/console';
 import { FileSystem } from '../vendor/utils/typescript/src/lib/file-system';
-import { Ui } from '../vendor/utils/typescript/src/lib/ui';
 import { Windows } from './lib/windows';
 import { MenuItemClickable } from './interface/Imenu-item-clickable';
 import { IJsonItem } from './interface/Ijson-item';
 import { Functions } from '../vendor/utils/typescript/src/lib/functions';
 import { IJson } from './interface/Ijson';
 import { ENotifyType } from '../vendor/utils/typescript/src/enum/Enotify-type';
+import { IPlatformOperations } from './interface/Iplatform-operation';
+import { NoPlatform } from './lib/no-platform';
+import { Gnome } from './lib/gnome';
 
 export class FavoriteAppsTray {
     public static readonly APP_NAME: string = 'Favorite Applications Indicator';
     public static readonly DIALOG_TIMEOUT: number = 15;
     private imagesDir: string;
-    private icon: string;
     private jsonConfigFile: string;
     private systray: SysTray | undefined;
     private fileSystem: FileSystem;
     private console: Console;
-    private ui: Ui;
-    private logger: ILogger;
     private notifyUpdated: boolean;
-    private windows: Windows;
 
     constructor() {
-        this.logger = new Logger();
-        this.fileSystem = new FileSystem(this.logger);
-        this.console = new Console(this.fileSystem, this.logger);
-        this.ui = new Ui(this.logger, this.fileSystem, this.console);
+        this.fileSystem = new FileSystem();
+        this.console = new Console(this.fileSystem);
         this.imagesDir = this.fileSystem.resolvePath(`${__dirname}/../images`);
         this.jsonConfigFile = this.fileSystem.resolvePath(`${this.fileSystem.systemInfo.homeDir}/favorite-apps-tray.json`);
-        this.icon = this.fileSystem.resolvePath(`${this.imagesDir}/logo/app.ico`);
-        this.windows = new Windows(this.fileSystem, this.console);
         this.notifyUpdated = false;
+    }
+
+    private _platformOperation: IPlatformOperations | undefined;
+    private get platformOperation(): IPlatformOperations {
+        if (!this._platformOperation) {
+            if (this.fileSystem.isWindows) {
+                this._platformOperation = new Windows(this.fileSystem, this.console);
+            } else if (this.fileSystem.isLinux) {
+                this._platformOperation = new Gnome(this.fileSystem, this.console);
+            } else {
+                this._platformOperation = new NoPlatform(this.fileSystem, this.console);
+                this._platformOperation.notify(`Invalid platform`, ENotifyType.error);
+            }
+        }
+        return this._platformOperation;
+    }
+
+    private get icon(): string {
+        if (this.fileSystem.isWindows) {
+            return this.fileSystem.resolvePath(`${this.imagesDir}/logo/windows.ico`);
+        }
+        return this.fileSystem.resolvePath(`${this.imagesDir}/logo/linux.png`);
     }
 
     private getBaseMenu(items: MenuItemClickable[] = []): MenuItemClickable[] {
@@ -69,7 +84,7 @@ export class FavoriteAppsTray {
 
     private mapJsonItemToItem(data: IJsonItem): MenuItemClickable {
         let item: MenuItemClickable = {} as MenuItemClickable;
-        const info = this.windows.getInfo(data);
+        const info = this.platformOperation.getInfo(data);
         if (info) {
             item = {
                 title: info.name,
@@ -78,7 +93,7 @@ export class FavoriteAppsTray {
                 enabled: true,
                 icon: info.icon,
                 click: () => {
-                    this.windows.run(info);
+                    this.platformOperation.run(info);
                 },
             } as MenuItemClickable;
         }
@@ -94,13 +109,13 @@ export class FavoriteAppsTray {
     }
 
     private buildMainMenu(): MenuItemClickable[] {
-        if (!this.fileSystem.isWindows) {
-            this.logger.error(new Error('Invalid platform'));
+        if (!this.fileSystem.isWindows && !this.fileSystem.isLinux) {
+            Logger.error(new Error('Invalid platform'));
             return this.getBaseMenu([]);
         }
         const jsonRes = this.fileSystem.readJsonFile<IJson>(this.jsonConfigFile);
         if (jsonRes.hasError) {
-            this.logger.error(jsonRes.error);
+            Logger.error(jsonRes.error);
             return this.getBaseMenu([]);
         }
         const items: MenuItemClickable[] = [];
@@ -158,11 +173,11 @@ export class FavoriteAppsTray {
             if (this.notifyUpdated) {
                 this.notifyUpdated = false;
                 message = 'Update, done.';
-                this.ui.notify(FavoriteAppsTray.APP_NAME, message, ENotifyType.info, FavoriteAppsTray.DIALOG_TIMEOUT);
+                this.platformOperation.notify(message, ENotifyType.info);
             }
-            this.logger.info(message);
+            Logger.info(message);
         }).catch((err) => {
-            this.ui.notify(FavoriteAppsTray.APP_NAME, 'systray failed to start: ' + err.message, ENotifyType.error, FavoriteAppsTray.DIALOG_TIMEOUT);
+            this.platformOperation.notify('systray failed to start: ' + err.message, ENotifyType.error);
         });
     }
 

@@ -12,7 +12,8 @@
     "outDir": "dist",
     "sourceMap": false,
     "strict": true,
-    "declaration": false
+    "declaration": false,
+    "allowJs": true
   },
   "include": [
     "./src/**/*",
@@ -20,7 +21,7 @@
     "./images/logo",
     "./images/logo/**/*",
     "./vendor/utils/powershell",
-    "./vendor/utils/powershell/**/*",
+    "./vendor/utils/powershell/**/*"
   ],
   "exclude": [
     "node_modules"

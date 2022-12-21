@@ -1,6 +1,6 @@
 {
   "name": "favorite-apps-tray",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "description": "Tray applications to run favorites apps",
   "main": "dist/src/main.js",
   "bin": {
