@@ -1,7 +1,10 @@
+import { EShellType } from '../../vendor/utils/typescript/shell-utils';
+import { EItemType } from '../enum/Eitem-type';
+
 export interface IJsonItem {
     name?: string;
     item: string;
     description?: string;
-    type?: 'item' | 'custom-item' | 'command';
-    shell?: 'powershell' | 'cmd' | 'bash' | 'terminal-osx';
+    type?: EItemType;
+    shell?: EShellType;
 }
