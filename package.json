@@ -1,59 +1,67 @@
 {
   "name": "favorite-apps-tray",
-  "version": "4.0.0",
+  "displayName": "Favorite Apps Tray",
+  "version": "5.0.0",
   "description": "Tray applications to run favorites apps",
-  "main": "dist/src/main.js",
-  "bin": {
-    "favorite-apps-tray": "./dist/src/main.js"
-  },
+  "main": ".webpack/main",
   "scripts": {
-    "prepack": "npm run build && npm run lint-and-fix",
-    "build": "tsc",
-    "start": "npm run build && node dist/src/main.js",
-    "lint": "eslint . --ext .js,.ts",
-    "lint-and-fix": "eslint . --ext .js,.ts --fix"
+    "start": "cross-env NODE_ENV=production electron-forge start",
+    "start-dev": "cross-env NODE_ENV=development electron-forge start",
+    "package": "electron-forge package",
+    "make": "electron-forge make",
+    "publish": "electron-forge publish",
+    "lint": "eslint --ext .ts,.tsx .",
+    "build": "npm run lint && tsc"
   },
-  "files": [
-    "dist/**/*"
-  ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/zecarneiro/favorite-apps-tray-windows.git"
+    "url": "git+https://github.com/zecarneiro/favorite-apps-tray.git"
   },
-  "author": "José M. C. Noronha",
+  "keywords": [],
+  "author": {
+    "name": "José M. C. Noronha",
+    "bugs": {
+      "url": "https://github.com/zecarneiro/favorite-apps-tray/issues"
+    }
+  },
+  "homepage": "https://github.com/zecarneiro/favorite-apps-tray#readme",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/zecarneiro/favorite-apps-tray-windows/issues"
-  },
-  "homepage": "https://github.com/zecarneiro/favorite-apps-tray-windows#readme",
   "devDependencies": {
+    "@electron-forge/cli": "^6.0.4",
+    "@electron-forge/maker-deb": "^6.0.4",
+    "@electron-forge/maker-rpm": "^6.0.4",
+    "@electron-forge/maker-squirrel": "^6.0.4",
+    "@electron-forge/maker-zip": "^6.0.4",
+    "@electron-forge/plugin-webpack": "^6.0.4",
     "@types/cli-progress": "^3.11.0",
-    "@types/eslint": "^8.4.10",
-    "@types/fs-extra": "^9.0.13",
-    "@types/node": "^18.11.9",
+    "@types/fs-extra": "^11.0.1",
+    "@types/node": "^18.11.18",
     "@types/prompt-sync": "^4.2.0",
-    "@types/yargs": "^17.0.13",
-    "@typescript-eslint/eslint-plugin": "^5.44.0",
-    "@typescript-eslint/parser": "^5.44.0",
-    "dotenv-webpack": "^8.0.1",
-    "eslint": "^8.28.0",
-    "eslint-config-google": "^0.14.0",
-    "ts-loader": "^9.4.1",
-    "tsc-hooks": "^1.1.1",
-    "typescript": "^4.9.3",
-    "webpack": "^5.75.0",
-    "webpack-cli": "^5.0.0",
-    "webpack-shebang-plugin": "^1.1.8"
+    "@types/yargs": "^17.0.19",
+    "@typescript-eslint/eslint-plugin": "^5.0.0",
+    "@typescript-eslint/parser": "^5.0.0",
+    "@vercel/webpack-asset-relocator-loader": "1.7.3",
+    "copyfiles": "^2.4.1",
+    "cross-env": "^7.0.3",
+    "css-loader": "^6.0.0",
+    "electron": "22.0.2",
+    "eslint": "^8.0.1",
+    "eslint-plugin-import": "^2.25.0",
+    "fork-ts-checker-webpack-plugin": "^7.2.13",
+    "node-loader": "^2.0.0",
+    "style-loader": "^3.0.0",
+    "ts-loader": "^9.2.2",
+    "ts-node": "^10.0.0",
+    "typescript": "~4.5.4"
   },
   "dependencies": {
     "cli-progress": "^3.11.2",
     "dotenv": "^16.0.3",
-    "fs-extra": "^10.1.0",
+    "electron-squirrel-startup": "^1.0.0",
+    "fs-extra": "^11.1.0",
     "moment": "^2.29.4",
-    "nodejs-file-downloader": "^4.10.2",
+    "nodejs-file-downloader": "^4.10.6",
     "prompt-sync": "^4.2.0",
-    "systray2": "^2.1.4",
-    "uuid": "^9.0.0",
     "yargs": "^17.6.2"
   }
 }
