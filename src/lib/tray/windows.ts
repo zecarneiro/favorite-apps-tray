@@ -32,34 +32,40 @@ export class Windows implements IPlatform {
         return this._startMenuDirectoryInfo;
     }
 
-    private getItemData(jsonItem: IJsonItem): MenuItemConstructorOptions | undefined {
+    private getItemCommandData(jsonItem: IJsonItem): MenuItemConstructorOptions | undefined {
         let item: MenuItemConstructorOptions | undefined;
-        if (jsonItem.type) {
+        if (jsonItem.type && jsonItem.type === EItemType.command) {
             const fileInfo = FileUtils.getFileInfo(jsonItem.item);
             item = {
                 label: jsonItem.name || fileInfo.basenameWithoutExtension,
                 icon: undefined,
                 click: () => {
-                    if (jsonItem.type === EItemType.customItem || jsonItem.type === EItemType.item) {
-                        this.consoleUtils.exec({ cmd: 'Start-Process', args: ['-FilePath', `'${jsonItem.item}'`], verbose: true, isThrow: false, shellType: EShellType.powershell });
-                    } else if (jsonItem.type === EItemType.command) {
-                        this.consoleUtils.exec({ cmd: jsonItem.item, shellType: jsonItem.shell ? EShellType[jsonItem.shell] : undefined, verbose: true, isThrow: false });
-                    }
+                    this.consoleUtils.exec({ cmd: jsonItem.item, shellType: jsonItem.shell ? EShellType[jsonItem.shell] : undefined, verbose: true, isThrow: false });
                 }
             };
-            if (jsonItem.type !== EItemType.command) {
-                item.icon = path.resolve(`${this.iconsDirectory}/${fileInfo.basenameWithoutExtension}.ico`);
-                if (!FileUtils.fileExist(item.icon)) {
-                    this.fileUtils.extractIconLnkExe(jsonItem.item, item.icon);
-                    if (!FileUtils.fileExist(item.icon)) {
-                        item.icon = undefined;
-                    }
+        }
+        return item;
+    }
+
+    private getItemData(jsonItem: IJsonItem): MenuItemConstructorOptions | undefined {
+        let item: MenuItemConstructorOptions | undefined;
+        if (jsonItem.type) {
+            const fileInfo = FileUtils.getFileInfo(jsonItem.item);
+            const icon = path.resolve(`${this.iconsDirectory}/${fileInfo.basenameWithoutExtension}.ico`);
+            if (!FileUtils.fileExist(icon)) {
+                this.fileUtils.extractIconLnkExe(jsonItem.item, icon);
+            }
+            item = {
+                label: jsonItem.name || fileInfo.basenameWithoutExtension,
+                icon: FileUtils.fileExist(icon) ? icon : undefined,
+                click: () => {
+                    this.consoleUtils.exec({ cmd: 'Start-Process', args: ['-FilePath', `'${jsonItem.item}'`], verbose: true, isThrow: false, shellType: EShellType.powershell });
                 }
-                if (item.icon) {
-                    item.icon = nativeImage.createFromPath(item.icon as string);
-                    item.icon.setTemplateImage(true);
-                    item.icon = item.icon.resize(this.iconsSize);
-                }
+            };
+            if (item.icon) {
+                item.icon = nativeImage.createFromPath(icon);
+                item.icon.setTemplateImage(true);
+                item.icon = item.icon.resize(this.iconsSize);
             }
         }
         return item;
@@ -67,7 +73,9 @@ export class Windows implements IPlatform {
 
 
     getItem(jsonItem: IJsonItem): MenuItemConstructorOptions | undefined {
-        if ((jsonItem.type === EItemType.customItem && FileUtils.fileExist(jsonItem.item)) || jsonItem.type === EItemType.command) {
+        if (jsonItem.type === EItemType.command) {
+            return this.getItemCommandData(jsonItem);
+        } else if ((jsonItem.type === EItemType.customItem && FileUtils.fileExist(jsonItem.item))) {
             return this.getItemData(jsonItem);
         } else {
             for (const infoDir of this.startMenuDirectoryInfo) {
