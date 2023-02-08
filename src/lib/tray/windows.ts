@@ -40,7 +40,7 @@ export class Windows implements IPlatform {
                 label: jsonItem.name || fileInfo.basenameWithoutExtension,
                 icon: undefined,
                 click: () => {
-                    this.consoleUtils.exec({ cmd: jsonItem.item, shellType: jsonItem.shell ? EShellType[jsonItem.shell] : undefined, verbose: true, isThrow: false });
+                    this.consoleUtils.exec({ cmd: jsonItem.item, shellType: jsonItem.shell ? EShellType[jsonItem.shell] : undefined, verbose: false, isThrow: false });
                 }
             };
         }
@@ -59,7 +59,7 @@ export class Windows implements IPlatform {
                 label: jsonItem.name || fileInfo.basenameWithoutExtension,
                 icon: FileUtils.fileExist(icon) ? icon : undefined,
                 click: () => {
-                    this.consoleUtils.exec({ cmd: 'Start-Process', args: ['-FilePath', `'${jsonItem.item}'`], verbose: true, isThrow: false, shellType: EShellType.powershell });
+                    this.consoleUtils.exec({ cmd: 'Start-Process', args: ['-FilePath', `'${jsonItem.item}'`], verbose: false, isThrow: false, shellType: EShellType.powershell });
                 }
             };
             if (item.icon) {

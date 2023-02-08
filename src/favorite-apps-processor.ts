@@ -1,6 +1,5 @@
 import { NativeImage, Notification, app, nativeImage } from 'electron';
 import path from 'path';
-import * as dotenv from 'dotenv';
 import { FileUtils } from '../vendor/utils/typescript/file-utils';
 import { ConsoleUtils } from '../vendor/utils/typescript/console-utils';
 import { SystemUtils } from '../vendor/utils/typescript/system-utils';
@@ -32,7 +31,7 @@ export abstract class FavoriteAppsProcessor {
         this.fileUtils = new FileUtils();
         this.consoleUtils = new ConsoleUtils();
         this.systemUtils = new SystemUtils();
-        this.configEnvironment();
+        this.setConfigurations();
     }
 
     protected _theme: ETheme = ETheme.dark;
@@ -76,7 +75,7 @@ export abstract class FavoriteAppsProcessor {
     }
 
     protected get configDir(): string {
-        const dir = path.resolve(this.homeDir, '.config', FunctionUtils.stringReplaceAll(this.APP_NAME, [{search: ' ', toReplace: ''}]));
+        const dir = path.resolve(this.homeDir, '.config', app.getName());
         if (!FileUtils.fileExist(dir)) {
             FileUtils.createDir(dir);
         }
@@ -142,16 +141,9 @@ export abstract class FavoriteAppsProcessor {
         }
     }
 
-    private configEnvironment() {
-        const dotEnv = path.resolve(this.configDir, '.env');
-        const dataEnv = `
-        ROOT_DIR_PROJECT=${this.rootDir}
-        UTILS_POWERSHELL_DIR=${this.isNodeEnvironment(EEnvironment.development) ? path.resolve(this.resourceDir, 'vendor/utils/powershell') : path.resolve(this.resourceDir, 'powershell')}
-        UTILS_BASH_DIR=${this.isNodeEnvironment(EEnvironment.development) ? path.resolve(this.resourceDir, 'vendor/utils/bash') : path.resolve(this.resourceDir, 'bash')}
-        `;
-        FileUtils.writeTextFile(dotEnv, dataEnv);
-        dotenv.config({
-            path: dotEnv
-        });
+    private setConfigurations() {
+        global.bashUtilsDir = this.isNodeEnvironment(EEnvironment.development) ? path.resolve(this.resourceDir, 'vendor/utils/bash') : path.resolve(this.resourceDir, 'bash');
+        global.powershellUtilsDir = this.isNodeEnvironment(EEnvironment.development) ? path.resolve(this.resourceDir, 'vendor/utils/powershell') : path.resolve(this.resourceDir, 'powershell');
+        global.scriptCliUtilsDir = this.isNodeEnvironment(EEnvironment.development) ? path.resolve(this.resourceDir, 'vendor/utils/scripts-cli') : path.resolve(this.resourceDir, 'scripts-cli');
     }
 }

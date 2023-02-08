@@ -1,7 +1,7 @@
 {
   "name": "favorite-apps-tray",
   "displayName": "Favorite Apps Tray",
-  "version": "5.0.0",
+  "version": "6.0.0",
   "description": "Tray applications to run favorites apps",
   "main": ".webpack/main",
   "scripts": {
@@ -56,7 +56,6 @@
   },
   "dependencies": {
     "cli-progress": "^3.11.2",
-    "dotenv": "^16.0.3",
     "electron-squirrel-startup": "^1.0.0",
     "fs-extra": "^11.1.0",
     "moment": "^2.29.4",

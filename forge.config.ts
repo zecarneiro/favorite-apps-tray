@@ -16,6 +16,7 @@ const config: ForgeConfig = {
       './assets',
       './vendor/utils/powershell',
       './vendor/utils/bash',
+      './vendor/utils/scripts-cli',
     ]
   },
   rebuildConfig: {},
@@ -25,10 +26,12 @@ const config: ForgeConfig = {
     }),
     new MakerZIP({}, ['darwin']),
     new MakerRpm({
-
+      options: {icon: './assets/image/logo/icon.png' }
     }),
     new MakerDeb({
-
+      options: {
+        icon: './assets/image/logo/icon.png'
+      }
     })
   ],
   plugins: [

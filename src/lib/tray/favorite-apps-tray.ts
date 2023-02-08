@@ -8,6 +8,7 @@ import { FavoriteAppsProcessor } from '../../favorite-apps-processor';
 import { SystemUtils } from '../../../vendor/utils/typescript/system-utils';
 import { FileUtils } from '../../../vendor/utils/typescript/file-utils';
 import { FunctionUtils } from '../../../vendor/utils/typescript/function-utils';
+import { Gnome } from './gnome';
 
 export interface IIconsSize {
   height: number, width: number
@@ -44,6 +45,8 @@ export class FavoriteAppsTray extends FavoriteAppsProcessor {
     if (!this._platformProcess) {
       if (SystemUtils.isWindows) {
         this._platformProcess = new Windows(this.fileUtils, this.consoleUtils, this.iconsDir, this.MENU_ICON_SIZE);
+      } else if (SystemUtils.isGnome) {
+        this._platformProcess = new Gnome(this.fileUtils, this.consoleUtils, this.iconsDir, this.MENU_ICON_SIZE);
       }
     }
     return this._platformProcess;
@@ -109,7 +112,7 @@ export class FavoriteAppsTray extends FavoriteAppsProcessor {
                 if (!FunctionUtils.isJsonParsable(FileUtils.readTextFile(file[0]))) {
                   this.showNotification('Invalid JSON file');
                 } else {
-                  FileUtils.copyFile(file[0], this.jsonConfigMenuEntries);
+                  FileUtils.copyFile(file[0], this.jsonConfigMenuEntries, true);
                   this.updateMenu();
                 }
               }
@@ -142,12 +145,25 @@ export class FavoriteAppsTray extends FavoriteAppsProcessor {
                 this.configurations.isStartup = true;
               }
               this.updateConfigurations(this.configurations);
+              if (SystemUtils.isGnome) {
+                this.updateMenu();
+              } else {
+                this.showProcessing(true);
+              }
             }
           },
         ]
       },
       {
         id: '2',
+        label: 'Update',
+        toolTip: 'Update Entries',
+        click: () => {
+          this.updateMenu();
+        }
+      },
+      {
+        id: '3',
         label: 'Exit',
         toolTip: 'Exit of the application',
         click: () => {
