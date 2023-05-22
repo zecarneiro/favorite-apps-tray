@@ -1,7 +1,7 @@
 {
   "name": "favorite-apps-tray",
   "displayName": "Favorite Apps Tray",
-  "version": "6.0.0",
+  "version": "6.1.0",
   "description": "Tray applications to run favorites apps",
   "main": ".webpack/main",
   "scripts": {
@@ -35,9 +35,10 @@
     "@electron-forge/plugin-webpack": "^6.0.4",
     "@types/cli-progress": "^3.11.0",
     "@types/fs-extra": "^11.0.1",
-    "@types/node": "^18.11.18",
+    "@types/marked": "^5.0.0",
+    "@types/node": "^18.16.14",
     "@types/prompt-sync": "^4.2.0",
-    "@types/yargs": "^17.0.19",
+    "@types/yargs": "^17.0.24",
     "@typescript-eslint/eslint-plugin": "^5.0.0",
     "@typescript-eslint/parser": "^5.0.0",
     "@vercel/webpack-asset-relocator-loader": "1.7.3",
@@ -57,10 +58,12 @@
   "dependencies": {
     "cli-progress": "^3.11.2",
     "electron-squirrel-startup": "^1.0.0",
-    "fs-extra": "^11.1.0",
+    "fs-extra": "^11.1.1",
+    "marked": "^5.0.2",
+    "marked-terminal": "^5.2.0",
     "moment": "^2.29.4",
-    "nodejs-file-downloader": "^4.10.6",
+    "nodejs-file-downloader": "^4.11.2",
     "prompt-sync": "^4.2.0",
-    "yargs": "^17.6.2"
+    "yargs": "^17.7.2"
   }
 }
