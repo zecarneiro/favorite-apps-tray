@@ -16,7 +16,7 @@ const config: ForgeConfig = {
       './assets',
       './vendor/utils/powershell',
       './vendor/utils/bash',
-      './vendor/utils/scripts-cli',
+      './vendor/utils/apps',
     ]
   },
   rebuildConfig: {},

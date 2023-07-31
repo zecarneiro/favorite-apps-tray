@@ -144,6 +144,6 @@ export abstract class FavoriteAppsProcessor {
     private setConfigurations() {
         global.bashUtilsDir = this.isNodeEnvironment(EEnvironment.development) ? path.resolve(this.resourceDir, 'vendor/utils/bash') : path.resolve(this.resourceDir, 'bash');
         global.powershellUtilsDir = this.isNodeEnvironment(EEnvironment.development) ? path.resolve(this.resourceDir, 'vendor/utils/powershell') : path.resolve(this.resourceDir, 'powershell');
-        global.scriptCliUtilsDir = this.isNodeEnvironment(EEnvironment.development) ? path.resolve(this.resourceDir, 'vendor/utils/scripts-cli') : path.resolve(this.resourceDir, 'scripts-cli');
+        global.appsUtilsDir = this.isNodeEnvironment(EEnvironment.development) ? path.resolve(this.resourceDir, 'vendor/utils/apps') : path.resolve(this.resourceDir, 'apps');
     }
 }

@@ -44,7 +44,7 @@ export class Gnome implements IPlatform {
                 item = {
                     label: info.displayName || jsonItem.name,
                     click: () => {
-                        this.consoleUtils.exec({ cmd: info.command, verbose: false, isThrow: false, shellType: EShellType.bash });
+                        this.consoleUtils.exec({ cmd: info.commandByGtk ? info.commandByGtk : info.command, verbose: true, isThrow: false, shellType: EShellType.bash });
                     }
                 };
                 if (icon) {
