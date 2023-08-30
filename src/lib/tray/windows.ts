@@ -81,7 +81,15 @@ export class Windows implements IPlatform {
             for (const infoDir of this.startMenuDirectoryInfo) {
                 const index = infoDir.files.findIndex((file) => {
                     const fileData = FileUtils.getFileInfo(file);
-                    return fileData.basename === jsonItem.item;
+                    if (fileData.basename === jsonItem.item) {
+                        return true;
+                    } else {
+                        const jsonItemInfo = FileUtils.getFileInfo(jsonItem.item);
+                        if (jsonItemInfo.extension !== '.lnk' && jsonItemInfo.extension !== 'lnk') {
+                            return fileData.basename.startsWith(jsonItem.item);
+                        }
+                    }
+                    return false;
                 });
                 if (index >= 0) {
                     jsonItem.item = infoDir.files[index];
