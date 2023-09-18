@@ -4,15 +4,18 @@ import { EItemType } from '../../enum/Eitem-type';
 import { MenuItemConstructorOptions, nativeImage } from 'electron';
 import path from 'path';
 import { IIconsSize } from './favorite-apps-tray';
-import { FileUtils, IDirectoryInfo } from '../../../vendor/utils/typescript/file-utils';
-import { SystemUtils } from '../../../vendor/utils/typescript/system-utils';
-import { ConsoleUtils } from '../../../vendor/utils/typescript/console-utils';
-import { EShellType } from '../../../vendor/utils/typescript/shell-utils';
+import { FileUtils } from '../ts-js-utils/file-utils';
+import { ConsoleUtils } from '../ts-js-utils/console-utils';
+import { SystemUtils } from '../ts-js-utils/system-utils';
+import { IDirectoryInfo } from '../ts-js-utils/interface/Idirectory-info';
+import { EShellType } from '../ts-js-utils/enum/Eshell-type';
+import { ICommandInfo } from '../ts-js-utils/interface/Icommand-info';
+import { IDirectories } from '../../interface/Idirectories';
 
 export class Windows implements IPlatform {
     private startMenuDirectory: string[];
     private _startMenuDirectoryInfo: IDirectoryInfo[] | undefined;
-    constructor(private fileUtils: FileUtils, private consoleUtils: ConsoleUtils, private iconsDirectory: string, private iconsSize: IIconsSize) {
+    constructor(private fileUtils: FileUtils, private consoleUtils: ConsoleUtils, private iconsDirectory: string, private iconsSize: IIconsSize, private directories: IDirectories) {
         this.startMenuDirectory = [
             path.resolve(`${SystemUtils.systemInfo.homeDir}\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu`),
             path.resolve('C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs'),
@@ -53,7 +56,7 @@ export class Windows implements IPlatform {
             const fileInfo = FileUtils.getFileInfo(jsonItem.item);
             const icon = path.resolve(`${this.iconsDirectory}/${fileInfo.basenameWithoutExtension}.ico`);
             if (!FileUtils.fileExist(icon)) {
-                this.fileUtils.extractIconLnkExe(jsonItem.item, icon);
+                this.extractIconLnkExe(jsonItem.item, icon);
             }
             item = {
                 label: jsonItem.name || fileInfo.basenameWithoutExtension,
@@ -69,6 +72,21 @@ export class Windows implements IPlatform {
             }
         }
         return item;
+    }
+
+    private extractIconLnkExe(file: string, dest: string) {
+        if (SystemUtils.isWindows && FileUtils.fileExist(file) && FileUtils.validateFileExtension(file, ['.lnk', '.exe'])) {
+            const cmdInfo: ICommandInfo = {
+                cmd: `. "${path.normalize(this.directories.powershellScript)}\\MainUtils.ps1"`,
+                args: [
+                    `;IconExtractor -file "${file}" -dest "${dest}" -display`,
+                ],
+                isThrow: false,
+                verbose: false,
+                shellType: EShellType.powershell,
+            };
+            this.consoleUtils.execSync(cmdInfo);
+        }
     }
 
 

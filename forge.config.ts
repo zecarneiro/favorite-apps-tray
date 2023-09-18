@@ -14,9 +14,7 @@ const config: ForgeConfig = {
     executableName: 'favorite-apps-tray',
     extraResource: [
       './assets',
-      './vendor/utils/powershell',
-      './vendor/utils/bash',
-      './vendor/utils/apps',
+      './scripts',
     ]
   },
   rebuildConfig: {},

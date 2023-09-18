@@ -1,4 +1,4 @@
-import { EShellType } from '../../vendor/utils/typescript/shell-utils';
+import { EShellType } from '../lib/ts-js-utils/enum/Eshell-type';
 import { EItemType } from '../enum/Eitem-type';
 
 export interface IJsonItem {

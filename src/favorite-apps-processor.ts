@@ -1,10 +1,13 @@
 import { NativeImage, Notification, app, nativeImage } from 'electron';
 import path from 'path';
-import { FileUtils } from '../vendor/utils/typescript/file-utils';
-import { ConsoleUtils } from '../vendor/utils/typescript/console-utils';
-import { SystemUtils } from '../vendor/utils/typescript/system-utils';
-import { FunctionUtils } from '../vendor/utils/typescript/function-utils';
-import { LoggerUtils } from '../vendor/utils/typescript/logger-utils';
+import { FileUtils } from './lib/ts-js-utils/file-utils';
+import { ConsoleUtils } from './lib/ts-js-utils/console-utils';
+import { SystemUtils } from './lib/ts-js-utils/system-utils';
+import { LoggerUtils } from './lib/ts-js-utils/logger-utils';
+import { EShellType } from './lib/ts-js-utils/enum/Eshell-type';
+import { IBoot } from './interface/Iboot';
+import { ICommandInfo } from './lib/ts-js-utils/interface/Icommand-info';
+import { IDirectories } from './interface/Idirectories';
 
 export interface IConfigurations {
     isStartup: boolean;
@@ -23,7 +26,7 @@ export enum EEnvironment {
 
 export abstract class FavoriteAppsProcessor {
     public readonly APP_NAME: string = 'Favorite Apps Tray';
-    protected fileUtils: FileUtils ;
+    protected fileUtils: FileUtils;
     protected consoleUtils: ConsoleUtils;
     protected systemUtils: SystemUtils;
     private alreadySHowInvalidPlatform = false;
@@ -31,7 +34,6 @@ export abstract class FavoriteAppsProcessor {
         this.fileUtils = new FileUtils();
         this.consoleUtils = new ConsoleUtils();
         this.systemUtils = new SystemUtils();
-        this.setConfigurations();
     }
 
     protected _theme: ETheme = ETheme.dark;
@@ -130,6 +132,56 @@ export abstract class FavoriteAppsProcessor {
         new Notification({ title: this.APP_NAME, body: message, icon: this.logo }).show();
     }
 
+    protected get directories(): IDirectories {
+        const scriptsDir = path.resolve(this.resourceDir, 'scripts');
+        return {
+            bashScript: path.resolve(scriptsDir, 'bash-utils'),
+            powershellScript: path.resolve(scriptsDir, 'powershell-utils'),
+            script: scriptsDir
+        };
+    }
+
+
+    protected addBootApp(info: IBoot): boolean {
+        let cmdInfo: ICommandInfo | undefined;
+        if (SystemUtils.isWindows && (info.command || info.isDelete)) {
+            cmdInfo = { cmd: `. "${this.directories.powershellScript}\\MainUtils.ps1"`, shellType: EShellType.powershell };
+            if (info.command) {
+                cmdInfo = { ...cmdInfo,
+                    args: [
+                        `;AddBootApplication -name "${info.name}" -command "${info.command}" ${info.hidden ? ' -hidden' : ''}`,
+                    ],
+                };
+            } else {
+                cmdInfo = { ...cmdInfo,
+                    args: [
+                        `;DelBootApplication -name "${info.name}"`,
+                    ],
+                };
+            }
+        } else if (SystemUtils.isLinux && (info.command || info.isDelete)) {
+            cmdInfo = { cmd: `. "${this.directories.bashScript}/main-utils.sh"`, shellType: EShellType.bash };
+            if (info.command) {
+                cmdInfo = { ...cmdInfo,
+                    args: [
+                        `;add_boot_application "${info.name}" "${info.command}" ${info.hidden ? '1' : ''}`,
+                    ],
+                };
+            } else {
+                cmdInfo = { ...cmdInfo,
+                    args: [
+                        `;del_boot_application "${info.name}"`,
+                    ],
+                };
+            }
+        }
+        if (cmdInfo) {
+            const response = this.consoleUtils.execSync({ ...cmdInfo, verbose: true, isThrow: false, verboseOnlyCommand: true });
+            return response.hasError ? false : true;
+        }
+        return false;
+    }
+
     protected abstract process(showNotify: boolean, forceReadJsonMenuConfig?: boolean): void;
     public abstract distroy(): void;
     public start() {
@@ -139,11 +191,5 @@ export abstract class FavoriteAppsProcessor {
             LoggerUtils.error(error);
             this.showNotification(error.message);
         }
-    }
-
-    private setConfigurations() {
-        global.bashUtilsDir = this.isNodeEnvironment(EEnvironment.development) ? path.resolve(this.resourceDir, 'vendor/utils/bash') : path.resolve(this.resourceDir, 'bash');
-        global.powershellUtilsDir = this.isNodeEnvironment(EEnvironment.development) ? path.resolve(this.resourceDir, 'vendor/utils/powershell') : path.resolve(this.resourceDir, 'powershell');
-        global.appsUtilsDir = this.isNodeEnvironment(EEnvironment.development) ? path.resolve(this.resourceDir, 'vendor/utils/apps') : path.resolve(this.resourceDir, 'apps');
     }
 }

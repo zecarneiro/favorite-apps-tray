@@ -5,10 +5,10 @@ import { IPlatform } from '../../interface/Iplatform';
 import { Windows } from './windows';
 import * as path from 'path';
 import { FavoriteAppsProcessor } from '../../favorite-apps-processor';
-import { SystemUtils } from '../../../vendor/utils/typescript/system-utils';
-import { FileUtils } from '../../../vendor/utils/typescript/file-utils';
-import { FunctionUtils } from '../../../vendor/utils/typescript/function-utils';
 import { Gnome } from './gnome';
+import { SystemUtils } from '../ts-js-utils/system-utils';
+import { FileUtils } from '../ts-js-utils/file-utils';
+import { FunctionUtils } from '../ts-js-utils/function-utils';
 
 export interface IIconsSize {
   height: number, width: number
@@ -19,11 +19,7 @@ export class FavoriteAppsTray extends FavoriteAppsProcessor {
     height: 16, width: 16
   };
   private trayMenu: MenuItemConstructorOptions[] = [];
-
-  constructor() {
-    super();
-  }
-
+  
   private _tray: Tray | undefined;
   private get tray(): Tray {
     if (!this._tray || this._tray.isDestroyed()) {
@@ -44,9 +40,9 @@ export class FavoriteAppsTray extends FavoriteAppsProcessor {
   private get platformProcess(): IPlatform | undefined {
     if (!this._platformProcess) {
       if (SystemUtils.isWindows) {
-        this._platformProcess = new Windows(this.fileUtils, this.consoleUtils, this.iconsDir, this.MENU_ICON_SIZE);
+        this._platformProcess = new Windows(this.fileUtils, this.consoleUtils, this.iconsDir, this.MENU_ICON_SIZE, this.directories);
       } else if (SystemUtils.isGnome) {
-        this._platformProcess = new Gnome(this.fileUtils, this.consoleUtils, this.iconsDir, this.MENU_ICON_SIZE);
+        this._platformProcess = new Gnome(this.fileUtils, this.consoleUtils, this.iconsDir, this.MENU_ICON_SIZE, this.directories);
       }
     }
     return this._platformProcess;
@@ -138,10 +134,10 @@ export class FavoriteAppsTray extends FavoriteAppsProcessor {
             checked: this.configurations.isStartup,
             click: () => {
               if (this.configurations.isStartup) {
-                this.systemUtils.addBootApp({ name: app.getName(),  isDelete: true });
+                this.addBootApp({ name: app.getName(),  isDelete: true });
                 this.configurations.isStartup = false;
               } else {
-                this.systemUtils.addBootApp({ name: app.getName(), command: app.getPath('exe'), hidden: true });
+                this.addBootApp({ name: app.getName(), command: app.getPath('exe'), hidden: true });
                 this.configurations.isStartup = true;
               }
               this.updateConfigurations(this.configurations);
