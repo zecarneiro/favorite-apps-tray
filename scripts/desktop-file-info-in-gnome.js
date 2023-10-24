@@ -12,6 +12,16 @@ const data = {
     desktopFile: '',
 };
 
+function getTypeArg(args) {
+    if (args && args.length > 1) {
+        if (args[1] === 'name') return 'name';
+        else if (args[1] === 'name-start') return 'name-start';
+        else if (args[1] === 'system') return 'system';
+        else if (args[1] === 'system-name-start') return 'system-name-start';
+    }
+    return '';
+}
+
 function fileExist(file) {
     const gfile = Gio.File.new_for_path(file);
     return gfile.query_exists(null);
@@ -74,14 +84,6 @@ function trimComamnd(command) {
     return command.trim();
 }
 
-function isDesktopFile(desktopFile) {
-    if (desktopFile.lastIndexOf('.') < 0) {
-        return false;
-    }
-    const extension = desktopFile.substring(desktopFile.lastIndexOf('.') + 1, desktopFile.length) || '';
-    return extension === 'desktop';
-}
-
 function printData() {
     print(JSON.stringify(data));
 }
@@ -99,41 +101,39 @@ function getApplicationInfo(application) {
     }
 }
 
-function getAppByDesktopExtension(desktopFile) {
+function getById(nameOrFile, isStart = false) {
     const applicationsAll = Gio.AppInfo.get_all();
     for (const key in applicationsAll) {
-        if (applicationsAll[key].get_id() == desktopFile) {
-            getApplicationInfo(applicationsAll[key]);
+        const id = applicationsAll[key].get_id() || "";
+        if (isStart) {
+            if (id.startsWith(nameOrFile)) getApplicationInfo(applicationsAll[key]);
+        } else {
+            if (id == nameOrFile) getApplicationInfo(applicationsAll[key]);
         }
     }
 }
 
-function getAppByName(nameApp) {
+function getByName(nameOrFile, isStart = false) {
     const applicationsAll = Gio.AppInfo.get_all();
     for (const key in applicationsAll) {
-        if (applicationsAll[key].get_name() == nameApp || applicationsAll[key].get_display_name() == nameApp) {
-            getApplicationInfo(applicationsAll[key]);
-        }
-    }
-}
-
-function getAppByDesktopExtension(desktopFile) {
-    if (desktopFile) {
-        const applicationsAll = Gio.AppInfo.get_all();
-        for (const key in applicationsAll) {
-            if (applicationsAll[key].get_id() == desktopFile) {
-                getApplicationInfo(applicationsAll[key]);
-            }
+        const name = applicationsAll[key].get_name() || "";
+        const displayName = applicationsAll[key].get_display_name() || "";
+        if (isStart) {
+            if (name.startsWith(nameOrFile) || displayName.startsWith(nameOrFile)) getApplicationInfo(applicationsAll[key]);
+        } else {
+            if (nameApp == applicationsAll[key].get_name() || nameApp == applicationsAll[key].get_display_name()) getApplicationInfo(applicationsAll[key]);
         }
     }
 }
 
 function main(args) {
-    if (args && args.length == 1) {
-        if (!isDesktopFile(args[0])) {
-            getAppByName(args[0]);
-        } else {
-            getAppByDesktopExtension(args[0]);
+    if (args && args.length > 0) {
+        const nameOrFile = args[0] || "";
+        const typeArg = getTypeArg(args);
+        if (typeArg == "name" || typeArg == "name-start") {
+            getByName(nameOrFile, typeArg == "name-start");
+        } else if (typeArg == "system" || typeArg == "system-name-start") {
+            getById(nameOrFile, typeArg == "system-name-start");
         }
     }
 }

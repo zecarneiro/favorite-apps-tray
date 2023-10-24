@@ -1,6 +1,5 @@
 import { IJsonItem } from '../../interface/Ijson-item';
 import { IPlatform } from '../../interface/Iplatform';
-import { EItemType } from '../../enum/Eitem-type';
 import { MenuItemConstructorOptions, nativeImage } from 'electron';
 import path from 'path';
 import { IIconsSize } from './favorite-apps-tray';
@@ -11,6 +10,14 @@ import { IDirectoryInfo } from '../ts-js-utils/interface/Idirectory-info';
 import { EShellType } from '../ts-js-utils/enum/Eshell-type';
 import { ICommandInfo } from '../ts-js-utils/interface/Icommand-info';
 import { IDirectories } from '../../interface/Idirectories';
+import { IFileInfo } from '../ts-js-utils/interface/Ifile-info';
+import { FunctionUtils } from '../ts-js-utils/function-utils';
+
+interface IAppInfo {
+    name: string;
+    command: string;
+    exec: string;
+}
 
 export class Windows implements IPlatform {
     private startMenuDirectory: string[];
@@ -35,43 +42,24 @@ export class Windows implements IPlatform {
         return this._startMenuDirectoryInfo;
     }
 
-    private getItemCommandData(jsonItem: IJsonItem): MenuItemConstructorOptions | undefined {
-        let item: MenuItemConstructorOptions | undefined;
-        if (jsonItem.type && jsonItem.type === EItemType.command) {
-            const fileInfo = FileUtils.getFileInfo(jsonItem.item);
-            item = {
-                label: jsonItem.name || fileInfo.basenameWithoutExtension,
-                icon: undefined,
-                click: () => {
-                    this.consoleUtils.exec({ cmd: jsonItem.item, shellType: jsonItem.shell ? EShellType[jsonItem.shell] : undefined, verbose: false, isThrow: false });
-                }
+    private extractAppInfo(appName: string, isStart?: boolean): IAppInfo | undefined {
+        let appInfo: IAppInfo | undefined;
+        let cmdInfo: ICommandInfo | undefined;
+        if (SystemUtils.isWindows) {
+            const script = path.resolve(this.directories.script, 'app-info-in-windows.ps1');
+            cmdInfo = {
+                cmd: path.normalize(script),
+                args: ['-name', `"${appName}"`, isStart ? '-isStart' : ''],
+                shellType: EShellType.powershell,
             };
         }
-        return item;
-    }
-
-    private getItemData(jsonItem: IJsonItem): MenuItemConstructorOptions | undefined {
-        let item: MenuItemConstructorOptions | undefined;
-        if (jsonItem.type) {
-            const fileInfo = FileUtils.getFileInfo(jsonItem.item);
-            const icon = path.resolve(`${this.iconsDirectory}/${fileInfo.basenameWithoutExtension}.ico`);
-            if (!FileUtils.fileExist(icon)) {
-                this.extractIconLnkExe(jsonItem.item, icon);
-            }
-            item = {
-                label: jsonItem.name || fileInfo.basenameWithoutExtension,
-                icon: FileUtils.fileExist(icon) ? icon : undefined,
-                click: () => {
-                    this.consoleUtils.exec({ cmd: 'Start-Process', args: ['-FilePath', `'${jsonItem.item}'`], verbose: false, isThrow: false, shellType: EShellType.powershell });
-                }
-            };
-            if (item.icon) {
-                item.icon = nativeImage.createFromPath(icon);
-                item.icon.setTemplateImage(true);
-                item.icon = item.icon.resize(this.iconsSize);
+        if (cmdInfo) {
+            const resp = this.consoleUtils.execSync({ ...cmdInfo, isThrow: false, verbose: false });
+            if (!resp.hasError) {
+                appInfo = FunctionUtils.stringToObject<IAppInfo>(resp.data);
             }
         }
-        return item;
+        return appInfo && Object.keys(appInfo).length > 0 ? appInfo : undefined;
     }
 
     private extractIconLnkExe(file: string, dest: string) {
@@ -89,31 +77,89 @@ export class Windows implements IPlatform {
         }
     }
 
+    private getIcon(fileInfo: IFileInfo): string | undefined {
+        const icon = path.resolve(`${this.iconsDirectory}/${fileInfo.basenameWithoutExtension}.ico`);
+        if (!FileUtils.fileExist(icon)) {
+            this.extractIconLnkExe(fileInfo.original, icon);
+        }
+        return icon;
+    }
 
-    getItem(jsonItem: IJsonItem): MenuItemConstructorOptions | undefined {
-        if (jsonItem.type === EItemType.command) {
-            return this.getItemCommandData(jsonItem);
-        } else if ((jsonItem.type === EItemType.customItem && FileUtils.fileExist(jsonItem.item))) {
-            return this.getItemData(jsonItem);
-        } else {
-            for (const infoDir of this.startMenuDirectoryInfo) {
-                const index = infoDir.files.findIndex((file) => {
-                    const fileData = FileUtils.getFileInfo(file);
-                    if (fileData.basename === jsonItem.item) {
-                        return true;
-                    } else {
-                        const jsonItemInfo = FileUtils.getFileInfo(jsonItem.item);
-                        if (jsonItemInfo.extension !== '.lnk' && jsonItemInfo.extension !== 'lnk') {
-                            return fileData.basename.startsWith(jsonItem.item);
-                        }
-                    }
-                    return false;
-                });
-                if (index >= 0) {
-                    jsonItem.item = infoDir.files[index];
-                    return this.getItemData(jsonItem);
+    private getCommandData(jsonItem: IJsonItem): MenuItemConstructorOptions | undefined {
+        const fileInfo = FileUtils.getFileInfo(jsonItem.nameOrFile);
+        const displayName = jsonItem.displayName ? jsonItem.displayName : fileInfo?.basenameWithoutExtension || jsonItem.nameOrFile;
+        return {
+            label: displayName,
+            icon: undefined,
+            click: () => {
+                this.consoleUtils.exec({ cmd: jsonItem.nameOrFile, shellType: jsonItem.shell ? EShellType[jsonItem.shell] : undefined, verbose: false, isThrow: false });
+            }
+        };
+    }
+
+    private getSystemOrOtherData(jsonItem: IJsonItem): MenuItemConstructorOptions | undefined {
+        const fileInfo = FileUtils.getFileInfo(jsonItem.nameOrFile);
+        const icon = this.getIcon(fileInfo);
+        const displayName = jsonItem.displayName ? jsonItem.displayName : fileInfo?.basenameWithoutExtension || jsonItem.nameOrFile;
+        const item: MenuItemConstructorOptions = {
+            label: displayName,
+            icon: FileUtils.fileExist(icon) ? icon : undefined,
+            click: () => {
+                this.consoleUtils.exec({ cmd: 'Start-Process', args: ['-FilePath', `'${jsonItem.nameOrFile}'`], verbose: false, isThrow: false, shellType: EShellType.powershell });
+            }
+        };
+        if (item.icon) {
+            item.icon = nativeImage.createFromPath(icon);
+            item.icon.setTemplateImage(true);
+            item.icon = item.icon.resize(this.iconsSize);
+        }
+        return item;
+    }
+
+    private getSystemData(jsonItem: IJsonItem): MenuItemConstructorOptions | undefined {
+        let item: MenuItemConstructorOptions | undefined;
+        for (const infoDir of this.startMenuDirectoryInfo) {
+            const index = infoDir.files.findIndex((file) => {
+                const fileData = FileUtils.getFileInfo(file);
+                if (jsonItem.type == 'system') {
+                    return fileData.basename === jsonItem.nameOrFile;
+                } else if (jsonItem.type == 'system-name-start') {
+                    return fileData.basenameWithoutExtension.startsWith(jsonItem.nameOrFile);
+                }
+            });
+            if (index >= 0) {
+                jsonItem.nameOrFile = infoDir.files[index];
+                item = this.getSystemOrOtherData(jsonItem);
+            }
+        }
+        return item;
+    }
+
+    private getNameData(jsonItem: IJsonItem): MenuItemConstructorOptions | undefined {
+        let item: MenuItemConstructorOptions | undefined;
+        const appInfo = this.extractAppInfo(jsonItem.nameOrFile, jsonItem.type == 'name-start');
+        if (appInfo) {
+            const displayName = jsonItem.displayName ? jsonItem.displayName : appInfo.name || jsonItem.nameOrFile;
+            item = {
+                label: displayName,
+                icon: undefined,
+                click: () => {
+                    this.consoleUtils.exec({ cmd: appInfo.command, verbose: true, isThrow: false, shellType: EShellType.powershell });
                 }
             }
+        }
+        return item;
+    }
+
+    getItem(jsonItem: IJsonItem): MenuItemConstructorOptions | undefined {
+        if (jsonItem.type == 'command') {
+            return this.getCommandData(jsonItem);
+        } else if (jsonItem.type == 'other' && FileUtils.fileExist(jsonItem.nameOrFile)) {
+            return this.getSystemOrOtherData(jsonItem);
+        } else if (jsonItem.type == 'system' || jsonItem.type == 'system-name-start') {
+            return this.getSystemData(jsonItem);
+        } else if (jsonItem.type == 'name' || jsonItem.type == 'name-start') {
+            return this.getNameData(jsonItem);
         }
         return undefined;
     }
