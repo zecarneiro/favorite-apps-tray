@@ -1,7 +1,7 @@
 {
   "name": "favorite-apps-tray",
   "displayName": "Favorite Apps Tray",
-  "version": "7.0.0",
+  "version": "8.0.0",
   "description": "Tray applications to run favorites apps",
   "main": ".webpack/main",
   "scripts": {

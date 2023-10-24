@@ -149,13 +149,13 @@ export abstract class FavoriteAppsProcessor {
             if (info.command) {
                 cmdInfo = { ...cmdInfo,
                     args: [
-                        `;AddBootApplication -name "${info.name}" -command "${info.command}" ${info.hidden ? ' -hidden' : ''}`,
+                        `;add_boot_application -name "${info.name}" -command "${info.command}" ${info.hidden ? ' -hidden' : ''}`,
                     ],
                 };
             } else {
                 cmdInfo = { ...cmdInfo,
                     args: [
-                        `;DelBootApplication -name "${info.name}"`,
+                        `;del_boot_application -name "${info.name}"`,
                     ],
                 };
             }

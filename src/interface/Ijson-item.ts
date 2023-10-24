@@ -1,10 +1,8 @@
 import { EShellType } from '../lib/ts-js-utils/enum/Eshell-type';
-import { EItemType } from '../enum/Eitem-type';
 
 export interface IJsonItem {
-    name?: string;
-    item: string;
-    description?: string;
-    type?: EItemType;
+    nameOrFile: string;
+    type: 'name' | 'name-start' | 'system' | 'system-name-start' | 'other' | 'command';
+    displayName?: string;
     shell?: EShellType;
 }
