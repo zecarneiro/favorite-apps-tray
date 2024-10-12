@@ -1,56 +1,76 @@
-# Favorite Apps Tray
+# favorite-apps-tray
 
-- This repository contains app to add an menu with favorites apps on system tray
-
-## Configurations
-
-### Windows
-- All **Shurtcuts** , its on:
-  - On windows
-    - `C:\Users\YOUR_USER_NAME\AppData\Roaming\Microsoft\Windows\Start Menu\Programs`
-    - `C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs`
-  - On Linux
-    ```
-    ~/.local/share/applications
-    /usr/share/applications
-    /var/lib/snapd/desktop/applications
-    /var/lib/flatpak/exports/share/applications
-    ~/.local/share/flatpak/exports/share/applications
-    ```
+---
 
 **NOTE**
-- If **Shurtcuts** not exist, the content not appear
 
+If is the first time that you run this application, you should follow the instructions:
 
-### For Electron Forge
+- Windows
+  1. Open _CMD_ in current directory of this **README**
+  2. Run `scripts\set-powershell-exec-policy.bat`
+- Linux
+  1. Open `terminal` in current directory of this **README**
+  2. Run `chmod -R 777 .`
+
+---
+
+## Instalation
+
+### Windows
+
+```
+.\make.ps1 -install
+```
+
+To uninstall run `.\make.ps1 -uninstall`
+
+### Linux
+
+```
+.\make.sh -install
+```
+
+To uninstall run `.\make.sh -uninstall`
+
+## Build local
+
+To build the project its necessary to install **golang** and **git**
+
+```
+git clone https://github.com/zecarneiro/favorite-apps-tray.git
+```
+
+### Windows
+
 Run:
 
-- `npm install @electron-forge/cli @electron-forge/maker-deb @electron-forge/maker-rpm @electron-forge/maker-squirrel @electron-forge/maker-zip @electron-forge/shared-types -D`
-- `npx electron-forge import`
-- Create `forge.config.js` on your root project directory and insert
-```javascript
-...
-module.exports = {
-  "packagerConfig": {
-    "icon": "./assets/image/icon"
-  },
-  "makers": [
-    {
-      "name": "@electron-forge/maker-squirrel",
-      "config": {}
-    },
-    {
-      "name": "@electron-forge/maker-zip",
-      "platforms": ["darwin"]
-    },
-    {
-      "name": "@electron-forge/maker-deb",
-      "config": {}
-    },
-    {
-      "name": "@electron-forge/maker-rpm",
-      "config": {}
-    }
-  ]
-}
+```
+.\make.ps1 -installDependencies
+.\make.ps1 -build
+```
+
+### Ubuntu
+
+Run:
+
+```
+.\make.sh -installDependencies
+.\make.sh -build
+```
+
+## Create Release Packages
+
+Will create a **zip** file on release directory. The zip file contains files on the release directory
+
+### Windows
+
+```
+.\make.ps1 -release
+```
+
+### Ubuntu
+
+```
+.\make.sh -release
 ```

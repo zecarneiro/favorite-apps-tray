@@ -1,9 +1,9 @@
-[submodule "ts-js-utils"]
-	path = src/lib/ts-js-utils
-	url = https://github.com/zecarneiro/ts-js-utils.git
-[submodule "bash-utils"]
-	path = scripts/bash-utils
-	url = https://github.com/zecarneiro/bash-utils.git
 [submodule "powershell-utils"]
-	path = scripts/powershell-utils
+	path = vendor/powershell-utils
 	url = https://github.com/zecarneiro/powershell-utils.git
+[submodule "bash-utils"]
+	path = vendor/bash-utils
+	url = https://github.com/zecarneiro/bash-utils.git
+[submodule "golangutils"]
+	path = src/lib/golangutils
+	url = https://github.com/zecarneiro/golangutils.git
