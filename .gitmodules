@@ -5,5 +5,5 @@
 	path = vendor/bash-utils
 	url = https://github.com/zecarneiro/bash-utils.git
 [submodule "golangutils"]
-	path = src/lib/golangutils
+	path = vendor/golangutils
 	url = https://github.com/zecarneiro/golangutils.git

@@ -45,7 +45,7 @@ function _installDependencies() {
     infolog "Install all dependencies"
     for package_name in "${package_list[@]}"; do
         evaladvanced "sudo apt install $package_name -y"
-    done 
+    done
 }
 
 function _install() {
@@ -58,6 +58,7 @@ function _install() {
     create_shortcut_file --name "${APP_NAME}" --exec "$installBin" --icon "$installDir/assets/image/logo/icon.png"
     add_boot_application "$APP_NAME" "$installBin" 1
     chmod -R 777 "$installDir"
+    evaladvanced "sudo update-desktop-database"
 }
 
 function _uninstall() {
@@ -67,6 +68,7 @@ function _uninstall() {
     del_shortcut_file "${APP_NAME}"
     deletedirectory "$installDir"
     deletedirectory "${HOME}/.config/$APP_NAME"
+    evaladvanced "sudo update-desktop-database"
 }
 
 function _generatePackage() {
@@ -84,6 +86,7 @@ function _preparePackage() {
     _copyDirectory "$MAKE_SCRIPT_DIR/assets" "$RELEASE_DIR" false
     _copyDirectory "$MAKE_SCRIPT_DIR/scripts" "$RELEASE_DIR" false
     _copyDirectory "$MAKE_SCRIPT_DIR/vendor" "$RELEASE_DIR" false
+    deletedirectory "$RELEASE_DIR/vendor/golangutils"
     cp "$MAKE_SCRIPT_DIR/make.ps1" "$RELEASE_DIR/make.ps1"
     cp "$MAKE_SCRIPT_DIR/make.sh" "$RELEASE_DIR/make.sh"
     cp "$MAKE_SCRIPT_DIR/APP_INFO.conf" "$RELEASE_DIR/APP_INFO.conf"
@@ -113,7 +116,7 @@ function _build() {
     export GOOS=linux
     infolog "Build release LINUX app..."
     go build -o "$BINARY" "$MAKE_SCRIPT_DIR/src/main.go"
-    
+
     _preparePackage $isRelease
 }
 
@@ -127,7 +130,7 @@ function main() {
         -clean) _clean ;;
         -build) _build ;;
         -release) _build true ;;
-        -install) 
+        -install)
             _uninstall
             _install
         ;;

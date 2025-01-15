@@ -78,6 +78,7 @@ function _preparePackage() {
     _copyDirectory -directory "$MAKE_SCRIPT_DIR\assets" -destination "$RELEASE_DIR" -onlyFiles $false
     _copyDirectory -directory "$MAKE_SCRIPT_DIR\scripts" -destination "$RELEASE_DIR" -onlyFiles $false
     _copyDirectory -directory "$MAKE_SCRIPT_DIR\vendor" -destination "$RELEASE_DIR" -onlyFiles $false
+    deletedirectory "$RELEASE_DIR/vendor/golangutils"
     Copy-Item "$MAKE_SCRIPT_DIR\make.ps1" "$RELEASE_DIR\make.ps1"
     Copy-Item "$MAKE_SCRIPT_DIR\make.sh" "$RELEASE_DIR\make.sh"
     Copy-Item "$MAKE_SCRIPT_DIR\APP_INFO.conf" "$RELEASE_DIR\APP_INFO.conf"
@@ -107,7 +108,7 @@ function _build {
     export GOOS=linux
     infolog "Build LINUX app..."
     go build -o "$BINARY_LINUX" "$MAKE_SCRIPT_DIR\src\main.go"
-    
+
     _preparePackage $isRelease
 }
 

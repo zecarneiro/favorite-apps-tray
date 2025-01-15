@@ -2,9 +2,10 @@ package platform
 
 import (
 	"errors"
+	"golangutils"
+	"golangutils/entity"
 	"main/src/entities"
 	"main/src/enums"
-	"main/src/lib/golangutils"
 	"main/src/lib/shared"
 )
 
@@ -16,14 +17,14 @@ var (
 func extractWindowsIcon(appInfo entities.AppsInfo) string {
 	iconFile := getIcon(appInfo.Shortcut)
 	if !golangutils.FileExist(iconFile) {
-		commandInfo := golangutils.CommandInfo{
-			Cmd:           ". \"" + golangutils.ResolvePath(shared.VendorDir + "/powershell-utils/MainUtils.ps1") + "\"",
+		commandInfo := entity.Command{
+			Cmd:           ". \"" + golangutils.ResolvePath(shared.VendorDir+"/powershell-utils/MainUtils.ps1") + "\"",
 			IsThrow:       false,
 			UsePowerShell: true,
 			Args:          []string{";icon_extractor -file \"" + appInfo.Icon + "\" -dest \"" + iconFile + "\" -display"},
-			Verbose:       false,
+			Verbose:       shared.EnableLogs,
 		}
-		golangutils.ExecRealTime(commandInfo)
+		shared.ConsoleUtils.ExecRealTime(commandInfo)
 	}
 	return iconFile
 }
@@ -32,13 +33,13 @@ func getItemInfoWindows(item entities.MenuItemJson) (entities.ItemInfo, error) {
 	if item.Type == enums.WINDOWS_APPS {
 		for _, appInfo := range windowsAppsInfo {
 			if appInfo.DisplayName == item.Name || matchRegexByItem(item, appInfo) {
-				return getInfoFunc(appInfo), nil
+				return getInfoFunc(appInfo, item.Command), nil
 			}
 		}
 	} else if item.Type == enums.SHORTCUTS {
 		for _, appInfo := range shortcutsAppsInfo {
 			if appInfo.Shortcut == item.Name+".lnk" || matchRegexByItem(item, appInfo) {
-				return getInfoFunc(appInfo), nil
+				return getInfoFunc(appInfo, item.Command), nil
 			}
 		}
 	} else if item.Type == enums.COMMAND {

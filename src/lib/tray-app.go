@@ -1,9 +1,11 @@
 package lib
 
 import (
+	"fmt"
+	"golangutils"
+	"golangutils/entity"
 	"main/src/entities"
 	"main/src/enums"
-	"main/src/lib/golangutils"
 	"main/src/lib/platform"
 	"main/src/lib/shared"
 	"sort"
@@ -22,6 +24,7 @@ func refresh(forceLoadApps bool) {
 	systray.ResetMenu()
 	loadMenuJsonData()
 	buildTrayApp()
+	updateMenuJsonData()
 }
 
 func isValidItem(item entities.MenuItemJson) bool {
@@ -61,16 +64,21 @@ func buildMenuItem(items []entities.MenuItemJson, mainMenu *systray.MenuItem) {
 				menuItem = systray.AddMenuItem(itemInfo.Name, itemInfo.Name)
 			}
 			if len(itemInfo.Icon) > 0 && golangutils.FileExist(itemInfo.Icon) {
-				menuItem.SetIcon(golangutils.ReadFileInByte(itemInfo.Icon))
+				icon, err := golangutils.ReadFileInByte(itemInfo.Icon)
+				if err != nil {
+					shared.LoggerUtils.Error(err.Error())
+				} else {
+					menuItem.SetIcon(icon)
+				}
 			}
 			menuItem.Click(func() {
-				command := golangutils.CommandInfo{Cmd: itemInfo.Exec, Verbose: true, IsThrow: false}
-				if golangutils.IsWindows() {
+				command := entity.Command{Cmd: itemInfo.Exec, Verbose: shared.EnableLogs, IsThrow: false}
+				if shared.SystemUtils.IsWindows() {
 					command.UsePowerShell = true
-				} else if golangutils.IsLinux() {
+				} else if shared.SystemUtils.IsLinux() {
 					command.UseBash = true
 				}
-				golangutils.ExecRealTimeAsync(command)
+				shared.ConsoleUtils.ExecRealTimeAsync(command)
 			})
 		}
 	}
@@ -81,7 +89,7 @@ func buildSettingMenu() {
 	settingsMenu.AddSubMenuItem("Update Menu", "Update Menu for any changes").Click(func() {
 		shared.InfoNotify("Processing...")
 		refresh(true)
-		shared.InfoNotify("Processing, done.")
+		shared.OkNotify("Processing, done.")
 	})
 	settingsMenu.AddSubMenuItem("Select/Change JSON file", "Select JSON configuration file").Click(func() {
 		filename, err := shared.SelectFileDialog()
@@ -96,8 +104,26 @@ func buildSettingMenu() {
 			} else {
 				refresh(true)
 			}
-			shared.InfoNotify("Processing, done.")
+			shared.OkNotify("Processing, done.")
 		}
+	})
+	enableLogsItem := settingsMenu.AddSubMenuItemCheckbox("Enable Logs", "Enable logs for most of operations", menuJsonData.EnableLogs)
+	enableLogsItem.Click(func() {
+		message := ""
+		if enableLogsItem.Checked() {
+			enableLogsItem.Uncheck()
+			message = "disabled"
+			shared.EnableLogs = false
+		} else {
+			enableLogsItem.Check()
+			message = "enabled"
+			shared.EnableLogs = true
+		}
+		message = fmt.Sprintf("All Logs was %s by user.", message)
+		shared.LoggerUtils.Info(message)
+		menuJsonData.EnableLogs = shared.EnableLogs
+		updateMenuJsonData()
+		shared.ShowMessageDialog(fmt.Sprintf("%s\n\nLog file is located in: <b>%s</b>", message, shared.GetLogFile()))
 	})
 
 	// About Settings
@@ -149,6 +175,7 @@ func loadMenuJsonData() {
 			shared.ErrorNotify(err.Error())
 		} else {
 			menuJsonData = data
+			menuJsonData.EnableLogs = shared.EnableLogs
 			menuJsonData.NoMenu = shared.SortMenuItemByName(menuJsonData.NoMenu)
 			for _, othersMenuItem := range menuJsonData.Others {
 				othersMenuItem = shared.SortMenuItemByName(othersMenuItem)
@@ -157,10 +184,15 @@ func loadMenuJsonData() {
 	}
 }
 
+func updateMenuJsonData() {
+	golangutils.WriteJsonFile(shared.GetJsonFile(), menuJsonData)
+}
+
 func buildTrayApp() {
 	buildMenu()
 	if !isSystrayCreated {
-		systray.SetIcon(golangutils.ReadFileInByte(shared.GetIcon()))
+		fileByte, _ := golangutils.ReadFileInByte(shared.GetIcon())
+		systray.SetIcon(fileByte)
 		systray.SetTitle(shared.ApplicationName)
 		systray.SetTooltip(shared.ApplicationName)
 		systray.SetOnClick(func(menu systray.IMenu) {

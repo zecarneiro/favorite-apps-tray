@@ -2,84 +2,128 @@ package shared
 
 import (
 	"errors"
+	"fmt"
+	"golangutils"
+	"golangutils/entity"
 	"main/src/entities"
-	"main/src/lib/golangutils"
 	"strings"
 )
 
-func getIcon() string {
-	icon := ExecutableDir + "/assets/image/logo/icon"
-	if golangutils.IsWindows() {
-		icon = icon + ".ico"
-	} else if golangutils.IsLinux() {
-		icon = icon + ".png"
+func setUiArgs(funcName string, appId string, title string, message string, icon string) []string {
+	args := ""
+	if len(appId) > 0 {
+		if SystemUtils.IsLinux() {
+			args = "'%s'"
+		} else if SystemUtils.IsWindows() {
+			args = "-appId '%s'"
+		}
+		args = fmt.Sprintf(args, appId)
 	}
-	return golangutils.ResolvePath(icon)
+	if len(title) > 0 {
+		if SystemUtils.IsLinux() {
+			args += " '%s'"
+		} else if SystemUtils.IsWindows() {
+			args += " -title '%s'"
+		}
+		args = fmt.Sprintf(args, title)
+	}
+	if len(message) > 0 {
+		if SystemUtils.IsLinux() {
+			args += " '%s'"
+		} else if SystemUtils.IsWindows() {
+			args += " -message '%s'"
+		}
+		args = fmt.Sprintf(args, message)
+	}
+	if len(icon) > 0 {
+		if SystemUtils.IsLinux() {
+			args += " '%s'"
+		} else if SystemUtils.IsWindows() {
+			args += " -icon '%s'"
+		}
+		args = fmt.Sprintf(args, icon)
+	}
+	return []string{"; " + funcName, args}
 }
 
-func showNotification(message string, typeNotify int) {
-	icon := getIcon()
-	if typeNotify == 0 {
-		golangutils.Notify(ApplicationName, ApplicationName, message, icon)
-	} else if typeNotify == 1 {
-		golangutils.OkNotify(ApplicationName, message, icon)
-	} else if typeNotify == 2 {
-		golangutils.InfoNotify(ApplicationName, message, icon)
-	} else if typeNotify == 3 {
-		golangutils.WarnNotify(ApplicationName, message, icon)
-	} else if typeNotify == 4 {
-		golangutils.ErrorNotify(ApplicationName, message, icon)
+func getUiScriptCmd() entity.Command {
+	cmd := entity.Command{
+		Cmd:     ". " + golangutils.ResolvePath(VendorDir+"/powershell-utils/others/profile-shell/ui-powershell-functions.ps1"),
+		Verbose: false,
 	}
+	if SystemUtils.IsLinux() {
+		cmd.Cmd = "source '" + golangutils.ResolvePath(VendorDir+"/bash-utils/others/profile-shell/ui-bash-functions.sh") + "'"
+		cmd.UseBash = true
+	} else if SystemUtils.IsWindows() {
+		cmd.UsePowerShell = true
+	}
+	return cmd
 }
 
-func Notify(message string) {
-	showNotification(message, 0)
+func Notify(title string, message string) {
+	cmd := getUiScriptCmd()
+	cmd.Args = setUiArgs("notify", GetAppNameFormated(), title, message, GetIcon())
+	ConsoleUtils.ExecAsync(cmd, nil)
+	if EnableLogs {
+		LoggerUtils.Log(message)
+	}
 }
 
 func OkNotify(message string) {
-	showNotification(message, 1)
+	cmd := getUiScriptCmd()
+	cmd.Args = setUiArgs("oknotify", GetAppNameFormated(), "", message, GetIcon())
+	ConsoleUtils.ExecAsync(cmd, nil)
+	if EnableLogs {
+		LoggerUtils.Ok(message)
+	}
 }
 
 func InfoNotify(message string) {
-	showNotification(message, 2)
+	cmd := getUiScriptCmd()
+	cmd.Args = setUiArgs("infonotify", GetAppNameFormated(), "", message, GetIcon())
+	ConsoleUtils.ExecAsync(cmd, nil)
+	if EnableLogs {
+		LoggerUtils.Info(message)
+	}
 }
 
 func WarnNotify(message string) {
-	showNotification(message, 3)
+	cmd := getUiScriptCmd()
+	cmd.Args = setUiArgs("warnnotify", GetAppNameFormated(), "", message, GetIcon())
+	ConsoleUtils.ExecAsync(cmd, nil)
+	if EnableLogs {
+		LoggerUtils.Warn(message)
+	}
 }
 
 func ErrorNotify(message string) {
-	showNotification(message, 4)
+	cmd := getUiScriptCmd()
+	cmd.Args = setUiArgs("errornotify", GetAppNameFormated(), "", message, GetIcon())
+	ConsoleUtils.ExecAsync(cmd, nil)
+	if EnableLogs {
+		LoggerUtils.Error(message)
+	}
 }
 
 func SelectFileDialog() (string, error) {
-	cmd := golangutils.CommandInfo{
-		Cmd:     ". " + golangutils.ResolvePath(VendorDir+"/powershell-utils/others/profile-shell/ui-powershell-functions.ps1"),
-		Args:    []string{"; selectfiledialog"},
-		Verbose: false,
-	}
-	if golangutils.IsLinux() {
-		cmd.Cmd = "source '" + golangutils.ResolvePath(VendorDir+"/bash-utils/others/profile-shell/ui-bash-functions.sh") + "'"
-		cmd.UseBash = true
-	} else if golangutils.IsWindows() {
-		cmd.UsePowerShell = true
-	}
-	res := golangutils.Exec(cmd)
+	cmd := getUiScriptCmd()
+	cmd.Args = setUiArgs("selectfiledialog", "", "", "", "")
+	res := ConsoleUtils.Exec(cmd)
 	if res.HasError() {
 		return "", res.Error
 	}
-	if golangutils.IsWindows() {
+	if SystemUtils.IsWindows() {
 		selected, err := golangutils.StringToObject[entities.SelectedFileDialog](res.Data)
-		if err!= nil {
-            return "", err
-        }
+		if err != nil {
+			return "", err
+		}
 		return selected.Selected, err
-	} else if golangutils.IsLinux() {
-		resArr := strings.Split(res.Data, golangutils.SysInfo().Eol)
+	} else if SystemUtils.IsLinux() {
+		resArr := strings.Split(res.Data, SystemUtils.Info().Eol)
 		if len(resArr) == 0 {
 			return "", errors.New("No file selected")
 		}
-		
+
 		if len(resArr) > 1 {
 			res.Data = resArr[1]
 		} else {
@@ -88,5 +132,30 @@ func SelectFileDialog() (string, error) {
 		selected, err := golangutils.StringToObject[entities.SelectedFileDialog](res.Data)
 		return selected.Selected, err
 	}
-	return "", errors.New(golangutils.UNKNOW_OS_MSG)
+	return "", errors.New(golangutils.GetUnknowOSMsg())
+}
+
+func ShowMessageDialog(message string) {
+	cmd := entity.Command{
+		Cmd:     "",
+		Verbose: false,
+		Args:    []string{},
+	}
+	if SystemUtils.IsLinux() {
+		cmd.Cmd = "zenity"
+		cmd.UseBash = true
+		cmd.Args = append(
+			cmd.Args,
+			"--info",
+			fmt.Sprintf("--text=\"%s\"", message),
+			fmt.Sprintf("--title=\"%s\"", GetAppNameFormated()),
+			fmt.Sprintf("--icon=\"%s\"", GetIcon()),
+		)
+	} else if SystemUtils.IsWindows() {
+		cmd.Cmd = fmt.Sprintf("[System.Windows.Forms.MessageBox]::Show('%s', '%s', [System.Windows.Forms.MessageBoxButtons]::OK, '%s')", message, GetAppNameFormated(), GetIcon())
+		cmd.UsePowerShell = true
+	}
+	if len(cmd.Cmd) > 0 {
+		ConsoleUtils.ExecAsync(cmd, nil)
+	}
 }

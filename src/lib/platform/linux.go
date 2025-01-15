@@ -2,9 +2,10 @@ package platform
 
 import (
 	"errors"
+	"golangutils"
+	"golangutils/entity"
 	"main/src/entities"
 	"main/src/enums"
-	"main/src/lib/golangutils"
 	"main/src/lib/shared"
 )
 
@@ -17,14 +18,14 @@ func extractLinuxIcon(appInfo entities.AppsInfo) string {
 	if !golangutils.FileExist(iconFile) && golangutils.FileExist(appInfo.Icon) {
 		if shared.IsValidateExtension(appInfo.Icon, []string{".svg"}) {
 			bashUtilsScript := golangutils.ResolvePath(shared.VendorDir + "/bash-utils/main-utils.sh")
-			commandInfo := golangutils.CommandInfo{
+			commandInfo := entity.Command{
 				Cmd:     "source \"" + bashUtilsScript + "\"",
 				IsThrow: false,
 				Args:    []string{";svg_to_png \"" + appInfo.Icon + "\" \"" + iconFile + "\""},
-				Verbose: false,
+				Verbose: shared.EnableLogs,
 				UseBash: true,
 			}
-			golangutils.ExecRealTime(commandInfo)
+			shared.ConsoleUtils.ExecRealTime(commandInfo)
 		} else if shared.IsValidateExtension(appInfo.Icon, []string{".png"}) {
 			golangutils.CopyFile(appInfo.Icon, iconFile)
 		}
@@ -36,7 +37,7 @@ func getItemInfoLinux(item entities.MenuItemJson) (entities.ItemInfo, error) {
 	if item.Type == enums.SHORTCUTS {
 		for _, appInfo := range linuxAppsInfo {
 			if appInfo.Shortcut == item.Name+".desktop" || matchRegexByItem(item, appInfo) {
-				return getInfoFunc(appInfo), nil
+				return getInfoFunc(appInfo, item.Command), nil
 			}
 		}
 	} else if item.Type == enums.COMMAND {
