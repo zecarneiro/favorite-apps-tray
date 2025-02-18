@@ -6,7 +6,7 @@ $JSON_FILE = "${TRAY_APP_CONFIG_DIR}\apps-info-${typeInfo}.json"
 $APPS_ARR = @()
 
 # IMPORT LIBS
-. "$SCRIPT_DIR\..\vendor\powershell-utils\MainUtils.ps1"
+. "$SCRIPT_DIR\..\vendor\powershell-utils\MainUtils.ps1" "IMPORT_ALL_LIBS"
 
 function saveToFile {
     deletefile "$JSON_FILE"
@@ -43,7 +43,7 @@ function main {
                 }
                 $APPS_ARR += $appInfo
             }
-        }        
+        }
         saveToFile
     }
 }

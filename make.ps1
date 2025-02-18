@@ -24,7 +24,7 @@ $POWERSHELL_VENDOR_DIR = "$MAKE_SCRIPT_DIR\vendor\powershell-utils"
 $PACKAGE_FILE = "$RELEASE_DIR\${APP_NAME}-${APP_VERSION}.zip"
 
 # IMPORT LIBS
-. "$POWERSHELL_VENDOR_DIR\MainUtils.ps1"
+. "$POWERSHELL_VENDOR_DIR\MainUtils.ps1" "IMPORT_ALL_LIBS"
 
 # ---------------------------------------------------------------------------- #
 #                               GENERIC FUNCTIONS                              #

@@ -21,7 +21,7 @@ func extractWindowsIcon(appInfo entities.AppsInfo) string {
 			Cmd:           ". \"" + golangutils.ResolvePath(shared.VendorDir+"/powershell-utils/MainUtils.ps1") + "\"",
 			IsThrow:       false,
 			UsePowerShell: true,
-			Args:          []string{";icon_extractor -file \"" + appInfo.Icon + "\" -dest \"" + iconFile + "\" -display"},
+			Args:          []string{"IMPORT_ALL_LIBS; icon_extractor -file \"" + appInfo.Icon + "\" -dest \"" + iconFile + "\" -display"},
 			Verbose:       shared.EnableLogs,
 		}
 		shared.ConsoleUtils.ExecRealTime(commandInfo)
