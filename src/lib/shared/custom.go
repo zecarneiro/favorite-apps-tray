@@ -2,6 +2,7 @@ package shared
 
 import (
 	"golangutils"
+	"golangutils/entity"
 	"main/src/entities"
 	"path/filepath"
 	"sort"
@@ -11,14 +12,13 @@ import (
 var (
 	ExecutableDir, _       = golangutils.GetExecutableDir()
 	ScriptsDir             = golangutils.ResolvePath(ExecutableDir + "/scripts")
-	VendorDir              = golangutils.ResolvePath(ExecutableDir + "/vendor")
 	ApplicationName        string
 	ApplicationVersion     string
 	ApplicationReleaseDate string
 	LoggerUtils            = golangutils.NewLoggerUtils()
 	SystemUtils            = golangutils.NewSystemUtils(&LoggerUtils)
 	ConsoleUtils           = golangutils.NewConsoleUtils(&LoggerUtils)
-	EnableLogs             = false
+	EnableLogs             = true
 )
 
 func loadAppInformations(line string, err error) {
@@ -35,9 +35,17 @@ func loadAppInformations(line string, err error) {
 	}
 }
 
+func setScriptsPermission() {
+	if SystemUtils.IsWindows() {
+		ConsoleUtils.SetFullPermissionWindows(ExecutableDir)
+	} else if SystemUtils.IsLinux() {
+		ConsoleUtils.SetFullPermissionLinux(ExecutableDir)
+	}
+}
+
 func GetAppNameFormated() string {
 	nameFormated := golangutils.StringReplaceAll(ApplicationName, map[string]string{"-": " "})
-	return strings.Title(strings.ToLower(nameFormated))
+	return strings.ToTitle(strings.ToLower(nameFormated))
 }
 
 func GetConfigIcon(appName string) string {
@@ -47,7 +55,7 @@ func GetConfigIcon(appName string) string {
 }
 
 func GetLogFile() string {
-	return golangutils.ResolvePath(GetConfigurationDir() + "/log")
+	return golangutils.JoinPath(GetConfigurationDir(), "log")
 }
 
 func GetConfigurationDir() string {
@@ -88,4 +96,13 @@ func LoadAppInformations() {
 	golangutils.DeleteFile(logFile)
 	LoggerUtils.SetLogFile(logFile)
 	golangutils.ReadFileLineByLine(golangutils.ResolvePath(ExecutableDir+"/APP_INFO.conf"), loadAppInformations)
+	setScriptsPermission()
+}
+
+func ProcessConsoleResult(result entity.Response[string]) {
+	if result.HasError() {
+		LoggerUtils.Error(result.Error.Error())
+	} else {
+		LoggerUtils.Debug(result.Data)
+	}
 }

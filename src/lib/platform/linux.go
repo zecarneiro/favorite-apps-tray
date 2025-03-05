@@ -17,7 +17,7 @@ func extractLinuxIcon(appInfo entities.AppsInfo) string {
 	iconFile := getIcon(appInfo.Shortcut)
 	if !golangutils.FileExist(iconFile) && golangutils.FileExist(appInfo.Icon) {
 		if shared.IsValidateExtension(appInfo.Icon, []string{".svg"}) {
-			bashUtilsScript := golangutils.ResolvePath(shared.VendorDir + "/bash-utils/main-utils.sh")
+			bashUtilsScript := "" //golangutils.ResolvePath(shared.VendorDir + "/bash-utils/main-utils.sh")
 			commandInfo := entity.Command{
 				Cmd:     "source \"" + bashUtilsScript + "\"",
 				IsThrow: false,
@@ -25,7 +25,7 @@ func extractLinuxIcon(appInfo entities.AppsInfo) string {
 				Verbose: shared.EnableLogs,
 				UseBash: true,
 			}
-			shared.ConsoleUtils.ExecRealTime(commandInfo)
+			shared.ProcessConsoleResult(shared.ConsoleUtils.Exec(commandInfo))
 		} else if shared.IsValidateExtension(appInfo.Icon, []string{".png"}) {
 			golangutils.CopyFile(appInfo.Icon, iconFile)
 		}
@@ -47,7 +47,7 @@ func getItemInfoLinux(item entities.MenuItemJson) (entities.ItemInfo, error) {
 }
 
 func loadAllLinuxApps(forceLoadApps bool) {
-	loadAllApps("./app-info-in-linux.sh", []string{enums.SHORTCUTS}, forceLoadApps)
+	loadAllApps([]string{enums.SHORTCUTS}, forceLoadApps)
 	linuxAppsInfo, _ = golangutils.ReadJsonFile[[]entities.AppsInfo](getAppsInfoJsonFile(enums.SHORTCUTS))
 }
 
@@ -58,4 +58,9 @@ func clearDataLinux() {
 func initLinux(forceLoadApps bool) {
 	clearDataLinux()
 	loadAllLinuxApps(forceLoadApps)
+}
+
+func runAppLinux(itemInfo entities.ItemInfo) {
+	command := entity.Command{Cmd: itemInfo.Exec, Verbose: shared.EnableLogs, IsThrow: false, UseBash: true}
+	shared.ConsoleUtils.ExecAsync(command, shared.ProcessConsoleResult)
 }

@@ -3,7 +3,6 @@ package platform
 import (
 	"errors"
 	"golangutils"
-	"golangutils/entity"
 	"main/src/entities"
 	"main/src/lib/shared"
 	"os"
@@ -45,12 +44,12 @@ func matchRegexByItem(item entities.MenuItemJson, appInfo entities.AppsInfo) boo
 
 func getInfoFunc(app entities.AppsInfo, defaultCommand string) entities.ItemInfo {
 	var icon string
+	exec := app.Command
 	if shared.SystemUtils.IsWindows() {
 		icon = extractWindowsIcon(app)
 	} else if shared.SystemUtils.IsLinux() {
 		icon = extractLinuxIcon(app)
 	}
-	exec := app.Command
 	if len(defaultCommand) > 0 {
 		exec = defaultCommand
 	}
@@ -60,24 +59,11 @@ func getInfoFunc(app entities.AppsInfo, defaultCommand string) entities.ItemInfo
 	return entities.ItemInfo{Exec: exec, Name: app.DisplayName, Icon: icon}
 }
 
-func loadAllApps(cmd string, typeApps []string, force bool) {
-	cmdInfo := entity.Command{
-		Cmd:     cmd,
-		Cwd:     shared.ScriptsDir,
-		EnvVars: os.Environ(),
-		Verbose: shared.EnableLogs,
-		IsThrow: false,
-	}
-	if shared.SystemUtils.IsWindows() {
-		cmdInfo.UsePowerShell = true
-	} else if shared.SystemUtils.IsLinux() {
-		cmdInfo.UseBash = true
-	}
+func loadAllApps(typeApps []string, force bool) {
 	for _, typeApp := range typeApps {
 		// Load shortcuts apps
 		if !golangutils.FileExist(getAppsInfoJsonFile(typeApp)) || force {
-			cmdInfo.Args = []string{shared.ApplicationName, typeApp}
-			shared.ConsoleUtils.ExecRealTime(cmdInfo)
+			shared.AppsInfo(typeApp)
 		}
 	}
 }
@@ -112,5 +98,13 @@ func InitPlatform(forceLoadApps bool) {
 		initWindows(forceLoadApps)
 	} else if shared.SystemUtils.IsLinux() {
 		initLinux(forceLoadApps)
+	}
+}
+
+func RunApp(itemInfo entities.ItemInfo) {
+	if shared.SystemUtils.IsWindows() {
+		runAppWindows(itemInfo)
+	} else if shared.SystemUtils.IsLinux() {
+		runAppLinux(itemInfo)
 	}
 }

@@ -7,6 +7,7 @@ import (
 	"main/src/entities"
 	"main/src/enums"
 	"main/src/lib/shared"
+	"path/filepath"
 )
 
 var (
@@ -17,14 +18,14 @@ var (
 func extractWindowsIcon(appInfo entities.AppsInfo) string {
 	iconFile := getIcon(appInfo.Shortcut)
 	if !golangutils.FileExist(iconFile) {
-		commandInfo := entity.Command{
-			Cmd:           ". \"" + golangutils.ResolvePath(shared.VendorDir+"/powershell-utils/MainUtils.ps1") + "\"",
-			IsThrow:       false,
-			UsePowerShell: true,
-			Args:          []string{"IMPORT_ALL_LIBS; icon_extractor -file \"" + appInfo.Icon + "\" -dest \"" + iconFile + "\" -display"},
-			Verbose:       shared.EnableLogs,
+		fileType := filepath.Ext(appInfo.Icon)
+		if fileType == ".lnk" || fileType == ".exe" {
+			if !shared.ExtractIcon(appInfo.Icon, iconFile) {
+				shared.LoggerUtils.Error("Extracted icon: " + iconFile)
+			}
+		} else {
+			iconFile = ""
 		}
-		shared.ConsoleUtils.ExecRealTime(commandInfo)
 	}
 	return iconFile
 }
@@ -49,7 +50,7 @@ func getItemInfoWindows(item entities.MenuItemJson) (entities.ItemInfo, error) {
 }
 
 func loadAllWindowsApps(forceLoadApps bool) {
-	loadAllApps(golangutils.ResolvePath(shared.ScriptsDir+"/app-info-in-windows.ps1"), []string{enums.SHORTCUTS, enums.WINDOWS_APPS}, forceLoadApps)
+	loadAllApps([]string{enums.SHORTCUTS, enums.WINDOWS_APPS}, forceLoadApps)
 	shortcutsAppsInfo, _ = golangutils.ReadJsonFile[[]entities.AppsInfo](getAppsInfoJsonFile(enums.SHORTCUTS))
 	windowsAppsInfo, _ = golangutils.ReadJsonFile[[]entities.AppsInfo](getAppsInfoJsonFile(enums.WINDOWS_APPS))
 }
@@ -62,4 +63,9 @@ func clearDataWindows() {
 func initWindows(forceLoadApps bool) {
 	clearDataWindows()
 	loadAllWindowsApps(forceLoadApps)
+}
+
+func runAppWindows(itemInfo entities.ItemInfo) {
+	command := entity.Command{Cmd: itemInfo.Exec, Verbose: shared.EnableLogs, IsThrow: false, UsePowerShell: true}
+	shared.ConsoleUtils.ExecAsync(command, shared.ProcessConsoleResult)
 }

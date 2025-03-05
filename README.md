@@ -2,36 +2,28 @@
 
 ---
 
-**NOTE**
+## Run
 
-If is the first time that you run this application, you should follow the instructions:
-
-- Windows
-  1. Open _CMD_ in current directory of this **README**
-  2. Run `scripts\set-powershell-exec-policy.bat`
-- Linux
-  1. Open `terminal` in current directory of this **README**
-  2. Run `chmod -R 777 .`
-
----
-
-## Instalation
+- Download release package on this [url](https://github.com/zecarneiro/favorite-apps-tray/releases) with name **favorite-apps-tray-VERSION.zip**
+- Extract zip file
 
 ### Windows
 
-```
-.\make.ps1 -install
-```
-
-To uninstall run `.\make.ps1 -uninstall`
+1. Open **POWERSHELL** in current directory of this **README**
+2. Run executable `favorite-apps-tray.exe`
 
 ### Linux
 
-```
-.\make.sh -install
-```
+1. Open `terminal` in current directory of this **README**
+2. Run `chmod -R 777 .`
+3. Run executable `favorite-apps-tray`
 
-To uninstall run `.\make.sh -uninstall`
+**Note:** This application require zenity installed if you use any linux distro.
+
+```bash
+sudo apt install zenity
+sudo apt install libnotify-bin
+````
 
 ## Build local
 
@@ -43,19 +35,19 @@ git clone https://github.com/zecarneiro/favorite-apps-tray.git
 
 ### Windows
 
+**Note:** If you have any problem with the `nake.ps1` script, please run `powershell -noexit -ExecutionPolicy Bypass -File .\make.ps1 ARGS`.
+
 Run:
 
-```
-.\make.ps1 -installDependencies
+```powershell
 .\make.ps1 -build
 ```
 
-### Ubuntu
+### Linux
 
 Run:
 
-```
-.\make.sh -installDependencies
+```bash
 .\make.sh -build
 ```
 
@@ -65,12 +57,12 @@ Will create a **zip** file on release directory. The zip file contains files on 
 
 ### Windows
 
-```
+```powershell
 .\make.ps1 -release
 ```
 
-### Ubuntu
+### Linux
 
-```
+```bash
 .\make.sh -release
 ```

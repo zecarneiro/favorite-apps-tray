@@ -3,7 +3,6 @@ package lib
 import (
 	"fmt"
 	"golangutils"
-	"golangutils/entity"
 	"main/src/entities"
 	"main/src/enums"
 	"main/src/lib/platform"
@@ -66,19 +65,13 @@ func buildMenuItem(items []entities.MenuItemJson, mainMenu *systray.MenuItem) {
 			if len(itemInfo.Icon) > 0 && golangutils.FileExist(itemInfo.Icon) {
 				icon, err := golangutils.ReadFileInByte(itemInfo.Icon)
 				if err != nil {
-					shared.LoggerUtils.Error(err.Error())
+					shared.ErrorNotify(err.Error())
 				} else {
 					menuItem.SetIcon(icon)
 				}
 			}
 			menuItem.Click(func() {
-				command := entity.Command{Cmd: itemInfo.Exec, Verbose: shared.EnableLogs, IsThrow: false}
-				if shared.SystemUtils.IsWindows() {
-					command.UsePowerShell = true
-				} else if shared.SystemUtils.IsLinux() {
-					command.UseBash = true
-				}
-				shared.ConsoleUtils.ExecRealTimeAsync(command)
+				platform.RunApp(itemInfo)
 			})
 		}
 	}
@@ -106,6 +99,8 @@ func buildSettingMenu() {
 			}
 			shared.OkNotify("Processing, done.")
 		}
+		shared.LoggerUtils.Ok("Processing, done.")
+
 	})
 	enableLogsItem := settingsMenu.AddSubMenuItemCheckbox("Enable Logs", "Enable logs for most of operations", menuJsonData.EnableLogs)
 	enableLogsItem.Click(func() {
@@ -120,17 +115,20 @@ func buildSettingMenu() {
 			shared.EnableLogs = true
 		}
 		message = fmt.Sprintf("All Logs was %s by user.", message)
-		shared.LoggerUtils.Info(message)
+		shared.InfoNotify(message)
 		menuJsonData.EnableLogs = shared.EnableLogs
 		updateMenuJsonData()
-		shared.ShowMessageDialog(fmt.Sprintf("%s\n\nLog file is located in: <b>%s</b>", message, shared.GetLogFile()))
+		shared.OkNotify(fmt.Sprintf("%s\n\nLog file is located in: <b>%s</b>", message, shared.GetLogFile()))
 	})
 
 	// About Settings
 	aboutSettings := settingsMenu.AddSubMenuItem("About", "About")
-	aboutSettings.AddSubMenuItem("Name: "+shared.ApplicationName, "").Disable()
-	aboutSettings.AddSubMenuItem("Version: "+shared.ApplicationVersion, "").Disable()
-	aboutSettings.AddSubMenuItem("Release Date: "+shared.ApplicationReleaseDate, "").Disable()
+	aboutSettings.Click(func() {
+		message := "Name: " + shared.ApplicationName
+		message += "\nVersion: " + shared.ApplicationVersion
+		message += "\nRelease Date: " + shared.ApplicationReleaseDate
+		shared.ShowMessageDialog(message)
+	})
 }
 
 func buildEmptyMenu() {

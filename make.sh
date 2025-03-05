@@ -40,14 +40,6 @@ function _copyDirectory {
 # ---------------------------------------------------------------------------- #
 #                                     MAIN                                     #
 # ---------------------------------------------------------------------------- #
-function _installDependencies() {
-    local package_list=(zenity libnotify-bin)
-    infolog "Install all dependencies"
-    for package_name in "${package_list[@]}"; do
-        evaladvanced "sudo apt install $package_name -y"
-    done
-}
-
 function _install() {
     local installDir="$OTHER_APPS_DIR/$APP_NAME"
     local installBin="$installDir/${APP_NAME}"
@@ -130,13 +122,7 @@ function main() {
         -clean) _clean ;;
         -build) _build ;;
         -release) _build true ;;
-        -install)
-            _uninstall
-            _install
-        ;;
-        -uninstall) _uninstall ;;
-        -installDependencies) _installDependencies ;;
-        *) log "make.ps1 -build|-clean|-install|-uninstall|-installDependencies" ;;
+        *) log "make.ps1 -build|-clean|-install|-uninstall|-run" ;;
     esac
 }
 main "$@"
