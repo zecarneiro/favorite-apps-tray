@@ -1,13 +1,13 @@
 # favorite-apps-tray
 
----
-
 ## Run
 
 - Download release package on this [url](https://github.com/zecarneiro/favorite-apps-tray/releases) with name **favorite-apps-tray-VERSION.zip**
 - Extract zip file
 
 ### Windows
+
+**NOTE:** If you have any problems, please run: `Set-ExecutionPolicy -ExecutionPolicy ByPass -Scope CurrentUser`
 
 1. Open **POWERSHELL** in current directory of this **README**
 2. Run executable `favorite-apps-tray.exe`
@@ -21,8 +21,9 @@
 **Note:** This application require zenity installed if you use any linux distro.
 
 ```bash
+# Debian/Ubuntu/Mint
 sudo apt install zenity
-sudo apt install libnotify-bin
+sudo apt install inkscape
 ````
 
 ## Build local

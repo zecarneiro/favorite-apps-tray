@@ -2,7 +2,6 @@ package shared
 
 import (
 	"errors"
-	"fmt"
 	"golangutils"
 	"golangutils/entity"
 	"main/src/entities"
@@ -114,17 +113,6 @@ func ShowMessageDialog(message string) {
 	golangutils.SetEnv(titleKey, GetAppNameFormated())
 	golangutils.SetEnv(messageKey, message)
 	golangutils.SetEnv(iconKey, GetIcon())
-	if SystemUtils.IsLinux() {
-		cmd.Cmd = "zenity"
-		cmd.UseBash = true
-		cmd.Args = append(
-			cmd.Args,
-			"--info",
-			fmt.Sprintf("--text=\"%s\"", message),
-			fmt.Sprintf("--title=\"%s\"", GetAppNameFormated()),
-			fmt.Sprintf("--icon=\"%s\"", GetIcon()),
-		)
-	}
 	ConsoleUtils.ExecAsync(cmd, ProcessConsoleResult)
 	golangutils.UnsetEnv(titleKey)
 	golangutils.UnsetEnv(messageKey)
@@ -159,4 +147,12 @@ func AppsInfo(typeApp string) {
 	ProcessConsoleResult(ConsoleUtils.Exec(cmd))
 	golangutils.UnsetEnv(appNameKey)
 	golangutils.UnsetEnv(typeAppKey)
+}
+
+func ShowProcessingMsg(isDone bool) {
+	if isDone {
+		OkNotify("Processing, done.")
+	} else {
+		InfoNotify("Processing...")
+	}
 }

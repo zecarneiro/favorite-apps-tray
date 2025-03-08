@@ -80,16 +80,16 @@ func buildMenuItem(items []entities.MenuItemJson, mainMenu *systray.MenuItem) {
 func buildSettingMenu() {
 	settingsMenu := systray.AddMenuItem("Settings", "Settings")
 	settingsMenu.AddSubMenuItem("Update Menu", "Update Menu for any changes").Click(func() {
-		shared.InfoNotify("Processing...")
+		shared.ShowProcessingMsg(false)
 		refresh(true)
-		shared.OkNotify("Processing, done.")
+		shared.ShowProcessingMsg(true)
 	})
 	settingsMenu.AddSubMenuItem("Select/Change JSON file", "Select JSON configuration file").Click(func() {
 		filename, err := shared.SelectFileDialog()
 		if err != nil {
 			shared.ErrorNotify(err.Error())
 		} else {
-			shared.InfoNotify("Processing...")
+
 			golangutils.DeleteFile(shared.GetJsonFile())
 			err := golangutils.CopyFile(filename, shared.GetJsonFile())
 			if err != nil {
@@ -97,7 +97,7 @@ func buildSettingMenu() {
 			} else {
 				refresh(true)
 			}
-			shared.OkNotify("Processing, done.")
+			shared.ShowProcessingMsg(true)
 		}
 		shared.LoggerUtils.Ok("Processing, done.")
 
@@ -114,11 +114,9 @@ func buildSettingMenu() {
 			message = "enabled"
 			shared.EnableLogs = true
 		}
-		message = fmt.Sprintf("All Logs was %s by user.", message)
-		shared.InfoNotify(message)
 		menuJsonData.EnableLogs = shared.EnableLogs
 		updateMenuJsonData()
-		shared.OkNotify(fmt.Sprintf("%s\n\nLog file is located in: <b>%s</b>", message, shared.GetLogFile()))
+		shared.InfoNotify(fmt.Sprintf("All Logs was %s by user.", message))
 	})
 
 	// About Settings
@@ -127,6 +125,7 @@ func buildSettingMenu() {
 		message := "Name: " + shared.ApplicationName
 		message += "\nVersion: " + shared.ApplicationVersion
 		message += "\nRelease Date: " + shared.ApplicationReleaseDate
+		message += "\nLog file located: " + shared.GetLogFile()
 		shared.ShowMessageDialog(message)
 	})
 }
@@ -186,6 +185,14 @@ func updateMenuJsonData() {
 	golangutils.WriteJsonFile(shared.GetJsonFile(), menuJsonData)
 }
 
+func showMenu(menu systray.IMenu) {
+	if menu != nil {
+		menu.ShowMenu()
+	} else {
+		shared.ShowProcessingMsg(false)
+	}
+}
+
 func buildTrayApp() {
 	buildMenu()
 	if !isSystrayCreated {
@@ -193,12 +200,8 @@ func buildTrayApp() {
 		systray.SetIcon(fileByte)
 		systray.SetTitle(shared.ApplicationName)
 		systray.SetTooltip(shared.ApplicationName)
-		systray.SetOnClick(func(menu systray.IMenu) {
-			menu.ShowMenu()
-		})
-		systray.SetOnRClick(func(menu systray.IMenu) {
-			menu.ShowMenu()
-		})
+		systray.SetOnClick(showMenu)
+		systray.SetOnRClick(showMenu)
 		isSystrayCreated = true
 		refresh(false)
 	}

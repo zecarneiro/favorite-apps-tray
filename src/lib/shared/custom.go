@@ -7,6 +7,9 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 var (
@@ -45,7 +48,8 @@ func setScriptsPermission() {
 
 func GetAppNameFormated() string {
 	nameFormated := golangutils.StringReplaceAll(ApplicationName, map[string]string{"-": " "})
-	return strings.ToTitle(strings.ToLower(nameFormated))
+	caser := cases.Title(language.English)
+	return caser.String(strings.ToLower(nameFormated))
 }
 
 func GetConfigIcon(appName string) string {
@@ -100,9 +104,10 @@ func LoadAppInformations() {
 }
 
 func ProcessConsoleResult(result entity.Response[string]) {
+	if len(result.Data) > 0 {
+		LoggerUtils.Debug(result.Data)
+	}
 	if result.HasError() {
 		LoggerUtils.Error(result.Error.Error())
-	} else {
-		LoggerUtils.Debug(result.Data)
 	}
 }

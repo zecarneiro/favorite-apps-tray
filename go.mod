@@ -2,7 +2,10 @@ module main
 
 go 1.23.0
 
-require github.com/energye/systray v1.0.2
+require (
+	github.com/energye/systray v1.0.2
+	golang.org/x/text v0.23.0
+)
 
 require (
 	github.com/godbus/dbus/v5 v5.1.0 // indirect

@@ -15,19 +15,19 @@ var (
 
 func extractLinuxIcon(appInfo entities.AppsInfo) string {
 	iconFile := getIcon(appInfo.Shortcut)
-	if !golangutils.FileExist(iconFile) && golangutils.FileExist(appInfo.Icon) {
-		if shared.IsValidateExtension(appInfo.Icon, []string{".svg"}) {
-			bashUtilsScript := "" //golangutils.ResolvePath(shared.VendorDir + "/bash-utils/main-utils.sh")
-			commandInfo := entity.Command{
-				Cmd:     "source \"" + bashUtilsScript + "\"",
-				IsThrow: false,
-				Args:    []string{";svg_to_png \"" + appInfo.Icon + "\" \"" + iconFile + "\""},
-				Verbose: shared.EnableLogs,
-				UseBash: true,
+	if !golangutils.FileExist(iconFile) {
+		if golangutils.FileExist(appInfo.Icon) {
+			if shared.IsValidateExtension(appInfo.Icon, []string{".svg"}) {
+				if !shared.ExtractIcon(appInfo.Icon, iconFile) {
+					shared.LoggerUtils.Error("Extracted icon: " + iconFile)
+				}
+			} else if shared.IsValidateExtension(appInfo.Icon, []string{".png"}) {
+				golangutils.CopyFile(appInfo.Icon, iconFile)
+			} else {
+				iconFile = ""
 			}
-			shared.ProcessConsoleResult(shared.ConsoleUtils.Exec(commandInfo))
-		} else if shared.IsValidateExtension(appInfo.Icon, []string{".png"}) {
-			golangutils.CopyFile(appInfo.Icon, iconFile)
+		} else {
+			iconFile = ""
 		}
 	}
 	return iconFile
