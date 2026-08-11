@@ -45,8 +45,8 @@ function _install() {
     local data="[Desktop Entry]
 Version=1.0
 Type=Application
-Terminal=true
-Exec=$INSTALL_DIR/{APP_NAME}
+Terminal=false
+Exec=$SYMBOLIC_SYSTEM_FILE
 Name={APP_DISPLAY_NAME}
 Comment={APP_DISPLAY_NAME}
 Icon=$INSTALL_DIR/linux.png"

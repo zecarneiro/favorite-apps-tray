@@ -7,7 +7,6 @@ import (
 	"golangutils/pkg/exe"
 	"golangutils/pkg/file"
 	"golangutils/pkg/logger"
-	"golangutils/pkg/logic"
 	"golangutils/pkg/platform"
 	"golangutils/pkg/system"
 	"path/filepath"
@@ -16,21 +15,20 @@ import (
 	"strings"
 )
 
-var (
-	ExecutableDir, _ = exe.GetExecutableDir()
-	ScriptsDir       = file.JoinPath(ExecutableDir, "scripts")
-	AppName          string
-	AppDisplayName   string
-	AppVersion       string
-	AppReleaseDate   string
-	EnableLogs       = true
-)
+func GetExecutableDir() string {
+	if platform.IsLinux() {
+		return file.JoinPath(system.HomeUserOptDir(), AppName)
+	}
+	directory, _ := exe.GetExecutableDir()
+	return directory
+}
+
+func GetScriptsDir() string {
+	return file.JoinPath(GetExecutableDir(), "scripts")
+}
 
 func loadAppInformations(line string) {
-	if strings.HasPrefix(line, "NAME") {
-		_, after, _ := strings.Cut(line, "=")
-		AppName = after
-	} else if strings.HasPrefix(line, "DISPLAY_NAME") {
+	if strings.HasPrefix(line, "DISPLAY_NAME") {
 		_, after, _ := strings.Cut(line, "=")
 		AppDisplayName = after
 	} else if strings.HasPrefix(line, "VERSION") {
@@ -44,9 +42,9 @@ func loadAppInformations(line string) {
 
 func setScriptsPermission() {
 	if platform.IsWindows() {
-		exe.Chmod777(ExecutableDir, false)
+		exe.Chmod777(GetExecutableDir(), false)
 	} else if platform.IsLinux() {
-		exe.Chmod777(ExecutableDir, false)
+		exe.Chmod777(GetExecutableDir(), false)
 	}
 }
 
@@ -73,9 +71,9 @@ func GetJsonFile() string {
 func GetIcon() string {
 	icon := ""
 	if platform.IsWindows() {
-		icon = fmt.Sprintf(`%s/win.ico`, ExecutableDir)
+		icon = fmt.Sprintf(`%s/win.ico`, GetExecutableDir())
 	} else if platform.IsLinux() {
-		icon = fmt.Sprintf(`%s/linux.png`, ExecutableDir)
+		icon = fmt.Sprintf(`%s/linux.png`, GetExecutableDir())
 	}
 	return file.ResolvePath(icon)
 }
@@ -94,7 +92,7 @@ func IsValidateExtension(file string, extensions []string) bool {
 }
 
 func LoadAppInformations() {
-	logic.ProcessError(file.ReadFileLineByLine(file.JoinPath(ExecutableDir, "APP_INFO.conf"), loadAppInformations))
+	logger.Error(file.ReadFileLineByLine(file.JoinPath(GetExecutableDir(), "APP_INFO.conf"), loadAppInformations))
 	common.WithAppId(AppName)
 	logFile := GetLogFile()
 	file.DeleteFile(logFile)
