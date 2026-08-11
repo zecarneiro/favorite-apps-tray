@@ -1,12 +1,13 @@
-package lib
+package internal
 
 import (
+	"favoriteappstray/internal/entities"
+	"favoriteappstray/internal/enums"
+	"favoriteappstray/internal/platforms"
+	"favoriteappstray/internal/shared"
 	"fmt"
-	"golangutils"
-	"main/src/entities"
-	"main/src/enums"
-	"main/src/lib/platform"
-	"main/src/lib/shared"
+	"golangutils/pkg/file"
+	"golangutils/pkg/ui"
 	"sort"
 
 	"github.com/energye/systray"
@@ -19,7 +20,7 @@ var (
 )
 
 func refresh(forceLoadApps bool) {
-	platform.InitPlatform(forceLoadApps)
+	platforms.InitPlatform(forceLoadApps)
 	systray.ResetMenu()
 	loadMenuJsonData()
 	buildTrayApp()
@@ -28,11 +29,11 @@ func refresh(forceLoadApps bool) {
 
 func isValidItem(item entities.MenuItemJson) bool {
 	if len(item.Name) < 1 {
-		shared.ErrorNotify("Invalid Item: " + item.Name)
+		shared.ErrorNofity("Invalid Item: " + item.Name)
 		return false
 	}
 	if item.Type != enums.WINDOWS_APPS && item.Type != enums.SHORTCUTS && item.Type != enums.COMMAND {
-		shared.ErrorNotify("Invalid Item Type: " + item.Type + ", from name: " + item.Name)
+		shared.ErrorNofity(fmt.Sprintf("Invalid Item Type: %s, from name: %s", item.Type, item.Name))
 		return false
 	}
 	return true
@@ -42,7 +43,7 @@ func buildMenuItem(items []entities.MenuItemJson, mainMenu *systray.MenuItem) {
 	itemsInfo := []entities.ItemInfo{}
 	for _, item := range items {
 		if isValidItem(item) {
-			appInfo, err := platform.GetItemInfo(item)
+			appInfo, err := platforms.GetItemInfo(item)
 			if err == nil {
 				itemsInfo = append(itemsInfo, appInfo)
 			}
@@ -62,16 +63,16 @@ func buildMenuItem(items []entities.MenuItemJson, mainMenu *systray.MenuItem) {
 			} else {
 				menuItem = systray.AddMenuItem(itemInfo.Name, itemInfo.Name)
 			}
-			if len(itemInfo.Icon) > 0 && golangutils.FileExist(itemInfo.Icon) {
-				icon, err := golangutils.ReadFileInByte(itemInfo.Icon)
+			if len(itemInfo.Icon) > 0 && file.IsFile(itemInfo.Icon) {
+				icon, err := file.ReadFileInByte(itemInfo.Icon)
 				if err != nil {
-					shared.ErrorNotify(err.Error())
+					shared.ErrorNofity(err.Error())
 				} else {
 					menuItem.SetIcon(icon)
 				}
 			}
 			menuItem.Click(func() {
-				platform.RunApp(itemInfo)
+				platforms.RunApp(itemInfo)
 			})
 		}
 	}
@@ -85,22 +86,19 @@ func buildSettingMenu() {
 		shared.ShowProcessingMsg(true)
 	})
 	settingsMenu.AddSubMenuItem("Select/Change JSON file", "Select JSON configuration file").Click(func() {
-		filename, err := shared.SelectFileDialog()
-		if err != nil {
-			shared.ErrorNotify(err.Error())
+		filenameResp := ui.SelectFile(shared.AppName)
+		if filenameResp.HasError() {
+			shared.ErrorNofity(filenameResp.Error.Error())
 		} else {
-
-			golangutils.DeleteFile(shared.GetJsonFile())
-			err := golangutils.CopyFile(filename, shared.GetJsonFile())
-			if err != nil {
-				shared.ErrorNotify(err.Error())
+			shared.ShowProcessingMsg(false)
+			file.DeleteFile(shared.GetJsonFile())
+			if err := file.CopyFile(filenameResp.Data, shared.GetJsonFile()); err != nil {
+				shared.ErrorNofity(err.Error())
 			} else {
 				refresh(true)
 			}
 			shared.ShowProcessingMsg(true)
 		}
-		shared.LoggerUtils.Ok("Processing, done.")
-
 	})
 	enableLogsItem := settingsMenu.AddSubMenuItemCheckbox("Enable Logs", "Enable logs for most of operations", menuJsonData.EnableLogs)
 	enableLogsItem.Click(func() {
@@ -114,19 +112,19 @@ func buildSettingMenu() {
 			message = "enabled"
 			shared.EnableLogs = true
 		}
+		ui.WithVerbose(shared.EnableLogs)
 		menuJsonData.EnableLogs = shared.EnableLogs
 		updateMenuJsonData()
-		shared.InfoNotify(fmt.Sprintf("All Logs was %s by user.", message))
+		shared.InfoNofity(fmt.Sprintf("All Logs was %s by user.", message))
 	})
-
 	// About Settings
 	aboutSettings := settingsMenu.AddSubMenuItem("About", "About")
 	aboutSettings.Click(func() {
-		message := "Name: " + shared.ApplicationName
-		message += "\nVersion: " + shared.ApplicationVersion
-		message += "\nRelease Date: " + shared.ApplicationReleaseDate
+		message := "Name: " + shared.AppName
+		message += "\nVersion: " + shared.AppVersion
+		message += "\nRelease Date: " + shared.AppReleaseDate
 		message += "\nLog file located: " + shared.GetLogFile()
-		shared.ShowMessageDialog(message)
+		shared.InfoDialog(message)
 	})
 }
 
@@ -156,7 +154,7 @@ func buildMenu() {
 		systray.AddSeparator()
 		buildMenuItem(menuJsonData.NoMenu, nil)
 	}
-	platform.ClearData()
+	platforms.ClearData()
 	systray.AddSeparator()
 	buildSettingMenu()
 	systray.AddMenuItem("Exit", "Exit of the application").Click(func() {
@@ -166,11 +164,12 @@ func buildMenu() {
 
 func loadMenuJsonData() {
 	menuJsonData = entities.MenuJson{}
-	if golangutils.FileExist(shared.GetJsonFile()) {
-		data, err := golangutils.ReadJsonFile[entities.MenuJson](shared.GetJsonFile())
+	if file.IsFile(shared.GetJsonFile()) {
+		data, err := file.ReadJsonFile[entities.MenuJson](shared.GetJsonFile())
 		if err != nil {
-			shared.ErrorNotify(err.Error())
+			shared.ErrorNofity(err.Error())
 		} else {
+			ui.WithVerbose(shared.EnableLogs)
 			menuJsonData = data
 			menuJsonData.EnableLogs = shared.EnableLogs
 			menuJsonData.NoMenu = shared.SortMenuItemByName(menuJsonData.NoMenu)
@@ -182,7 +181,9 @@ func loadMenuJsonData() {
 }
 
 func updateMenuJsonData() {
-	golangutils.WriteJsonFile(shared.GetJsonFile(), menuJsonData)
+	if err := file.WriteJsonFile(shared.GetJsonFile(), menuJsonData, false); err != nil {
+		shared.ErrorNofity(err.Error())
+	}
 }
 
 func showMenu(menu systray.IMenu) {
@@ -196,10 +197,10 @@ func showMenu(menu systray.IMenu) {
 func buildTrayApp() {
 	buildMenu()
 	if !isSystrayCreated {
-		fileByte, _ := golangutils.ReadFileInByte(shared.GetIcon())
+		fileByte, _ := file.ReadFileInByte(shared.GetIcon())
 		systray.SetIcon(fileByte)
-		systray.SetTitle(shared.ApplicationName)
-		systray.SetTooltip(shared.ApplicationName)
+		systray.SetTitle(shared.AppName)
+		systray.SetTooltip(shared.AppName)
 		systray.SetOnClick(showMenu)
 		systray.SetOnRClick(showMenu)
 		isSystrayCreated = true
@@ -208,8 +209,9 @@ func buildTrayApp() {
 }
 
 func Start() {
-	platform.Validate()
+	platforms.Validate()
 	shared.LoadAppInformations()
-	platform.InitPlatform(false)
+	ui.WithVerbose(shared.EnableLogs)
+	platforms.InitPlatform(false)
 	systray.Run(buildTrayApp, nil)
 }

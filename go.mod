@@ -1,4 +1,4 @@
-module main
+module favoriteappstray
 
 go 1.23.0
 
