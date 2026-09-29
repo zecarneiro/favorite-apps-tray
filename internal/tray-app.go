@@ -117,6 +117,7 @@ func buildSettingMenu() {
 		updateMenuJsonData()
 		shared.InfoNofity(fmt.Sprintf("All Logs was %s by user.", message))
 	})
+	buildThemeMenu(settingsMenu)
 	// About Settings
 	aboutSettings := settingsMenu.AddSubMenuItem("About", "About")
 	aboutSettings.Click(func() {
@@ -163,7 +164,7 @@ func buildMenu() {
 }
 
 func loadMenuJsonData() {
-	menuJsonData = entities.MenuJson{}
+	menuJsonData = entities.MenuJson{IsLightTheme: true}
 	if file.IsFile(shared.GetJsonFile()) {
 		data, err := file.ReadJsonFile[entities.MenuJson](shared.GetJsonFile())
 		if err != nil {
@@ -175,6 +176,9 @@ func loadMenuJsonData() {
 			menuJsonData.NoMenu = shared.SortMenuItemByName(menuJsonData.NoMenu)
 			for _, othersMenuItem := range menuJsonData.Others {
 				othersMenuItem = shared.SortMenuItemByName(othersMenuItem)
+			}
+			if !menuJsonData.IsLightTheme && !menuJsonData.IsDarkTheme {
+				menuJsonData.IsLightTheme = true
 			}
 		}
 	}
