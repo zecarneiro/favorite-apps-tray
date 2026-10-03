@@ -11,6 +11,7 @@ BINARY_DIR="$ROOT_DIR/bin"
 CONF_FILE="$DEPLOY_DIR/APP_INFO.conf"
 SCRIPTS_DIR="$ROOT_DIR/scripts"
 
+echo "🚀 Starting deployment.."
 echo ">>> Create release directory..."
 rm -rf "$RELEASE_DIR"
 mkdir -p "$DEPLOY_DIR"
@@ -44,3 +45,5 @@ fi
 
 echo ">>> Delete unnecessary files and directories..."
 rm -rf "$BINARY_DIR"
+
+echo "✅ Deployment finished!"

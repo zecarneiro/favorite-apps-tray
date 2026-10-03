@@ -7,6 +7,7 @@ BINARY_DIR="$ROOT_DIR/bin"
 GO_RELEASE_FLAGS="-s -w"
 GO_RELEASE_NO_CONSOLE_FLAGS=""
 
+echo "🚀 Building.."
 if [[ "$NO_CONSOLE_WINDOW" == "1" ]]; then
 	GO_RELEASE_NO_CONSOLE_FLAGS="-H=windowsgui"
 fi
@@ -23,3 +24,4 @@ echo ">>> Building for windows..."
 export GOOS=windows
 export GOARCH=amd64
 go build -ldflags="$GO_RELEASE_FLAGS $GO_RELEASE_NO_CONSOLE_FLAGS" -o "$BINARY_DIR/${APP_NAME}.exe" "$ROOT_DIR"
+echo "✅ Building finished!"
