@@ -72,6 +72,6 @@ func initApp(forceLoadApps bool) {
 }
 
 func runApp(itemInfo entities.ItemInfo) {
-	command := models.Command{Cmd: itemInfo.Exec, Verbose: shared.EnableLogs, IsThrow: false, UseShell: true, ShellToUse: golangutilsEnums.PowerShell, IsAsync: true}
+	command := models.Command{Cmd: itemInfo.Exec, Verbose: shared.EnableLogs, IsThrow: false, UseShell: true, ShellToUse: golangutilsEnums.PowerShell, IsAsync: true, Background: true}
 	exe.ExecRealTime(command)
 }

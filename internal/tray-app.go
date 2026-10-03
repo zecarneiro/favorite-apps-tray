@@ -7,16 +7,16 @@ import (
 	"favoriteappstray/internal/shared"
 	"fmt"
 	"golangutils/pkg/file"
-	"golangutils/pkg/ui"
 	"sort"
 
 	"github.com/energye/systray"
 )
 
 var (
-	menuJsonData     entities.MenuJson
-	menu             []*systray.MenuItem
-	isSystrayCreated = false
+	menuJsonData       entities.MenuJson
+	menu               []*systray.MenuItem
+	isSystrayCreated   = false
+	enableLogsMenuItem *systray.MenuItem
 )
 
 func refresh(forceLoadApps bool) {
@@ -80,53 +80,12 @@ func buildMenuItem(items []entities.MenuItemJson, mainMenu *systray.MenuItem) {
 
 func buildSettingMenu() {
 	settingsMenu := systray.AddMenuItem("Settings", "Settings")
-	settingsMenu.AddSubMenuItem("Update Menu", "Update Menu for any changes").Click(func() {
-		shared.ShowProcessingMsg(false)
-		refresh(true)
-		shared.ShowProcessingMsg(true)
-	})
-	settingsMenu.AddSubMenuItem("Select/Change JSON file", "Select JSON configuration file").Click(func() {
-		filenameResp := ui.SelectFile(shared.AppName)
-		if filenameResp.HasError() {
-			shared.ErrorNofity(filenameResp.Error.Error())
-		} else {
-			shared.ShowProcessingMsg(false)
-			file.DeleteFile(shared.GetJsonFile())
-			if err := file.CopyFile(filenameResp.Data, shared.GetJsonFile()); err != nil {
-				shared.ErrorNofity(err.Error())
-			} else {
-				refresh(true)
-			}
-			shared.ShowProcessingMsg(true)
-		}
-	})
-	enableLogsItem := settingsMenu.AddSubMenuItemCheckbox("Enable Logs", "Enable logs for most of operations", menuJsonData.EnableLogs)
-	enableLogsItem.Click(func() {
-		message := ""
-		if enableLogsItem.Checked() {
-			enableLogsItem.Uncheck()
-			message = "disabled"
-			shared.EnableLogs = false
-		} else {
-			enableLogsItem.Check()
-			message = "enabled"
-			shared.EnableLogs = true
-		}
-		ui.WithVerbose(shared.EnableLogs)
-		menuJsonData.EnableLogs = shared.EnableLogs
-		updateMenuJsonData()
-		shared.InfoNofity(fmt.Sprintf("All Logs was %s by user.", message))
-	})
+	settingsMenu.AddSubMenuItem("Update Menu", "Update Menu for any changes").Click(updateMenuProcessor)
+	settingsMenu.AddSubMenuItem("Select/Change JSON file", "Select JSON configuration file").Click(selectJsonFileProcessor)
+	enableLogsMenuItem = settingsMenu.AddSubMenuItemCheckbox("Enable Logs", "Enable logs for most of operations", menuJsonData.EnableLogs)
+	enableLogsMenuItem.Click(enableLogsProcessor)
 	buildThemeMenu(settingsMenu)
-	// About Settings
-	aboutSettings := settingsMenu.AddSubMenuItem("About", "About")
-	aboutSettings.Click(func() {
-		message := "Name: " + shared.AppName
-		message += "\nVersion: " + shared.AppVersion
-		message += "\nRelease Date: " + shared.AppReleaseDate
-		message += "\nLog file located: " + shared.GetLogFile()
-		shared.InfoDialog(message)
-	})
+	settingsMenu.AddSubMenuItem("About", "About").Click(aboutProcessor)
 }
 
 func buildEmptyMenu() {
@@ -170,7 +129,6 @@ func loadMenuJsonData() {
 		if err != nil {
 			shared.ErrorNofity(err.Error())
 		} else {
-			ui.WithVerbose(shared.EnableLogs)
 			menuJsonData = data
 			menuJsonData.EnableLogs = shared.EnableLogs
 			menuJsonData.NoMenu = shared.SortMenuItemByName(menuJsonData.NoMenu)
@@ -215,7 +173,6 @@ func buildTrayApp() {
 func Start() {
 	platforms.Validate()
 	shared.LoadAppInformations()
-	ui.WithVerbose(shared.EnableLogs)
 	platforms.InitPlatform(false)
 	systray.Run(buildTrayApp, nil)
 }

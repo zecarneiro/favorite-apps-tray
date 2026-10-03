@@ -3,9 +3,9 @@
 declare OTHERAPPS_DIR="$HOME/.local/opt"
 declare INSTALL_DIR="$OTHERAPPS_DIR/{APP_NAME}"
 declare SHORTCUT="$HOME/.local/share/applications/{APP_NAME}.desktop"
-declare ZIP_FILE="$OTHERAPPS_DIR/favorite-apps-tray-{APP_VERSION}.zip"
+declare ZIP_FILE="$OTHERAPPS_DIR/{APP_NAME}-{APP_VERSION}.zip"
 declare SYMBOLIC_SYSTEM_FILE="/usr/bin/{APP_NAME}"
-declare URL="https://github.com/zecarneiro/favorite-apps-tray/releases/download/v{APP_VERSION}/favorite-apps-tray-{APP_VERSION}.zip"
+declare URL="https://github.com/zecarneiro/{APP_NAME}/releases/download/v{APP_VERSION}/{APP_NAME}-{APP_VERSION}.zip"
 
 function _printInfo() {
     local operation="$1"

@@ -1,8 +1,8 @@
 {
   "version": "{APP_VERSION}",
   "description": "{APP_DISPLAY_NAME}",
-  "homepage": "https://github.com/zecarneiro/favorite-apps-tray",
-  "url": "https://github.com/zecarneiro/favorite-apps-tray/releases/download/v{APP_VERSION}/favorite-apps-tray-{APP_VERSION}.zip",
+  "homepage": "https://github.com/zecarneiro/{APP_NAME}",
+  "url": "https://github.com/zecarneiro/{APP_NAME}/releases/download/v{APP_VERSION}/{APP_NAME}-{APP_VERSION}.zip",
   "bin": "{APP_NAME}.exe",
   "post_install": [
     "$WScriptShell = New-Object -ComObject WScript.Shell",
@@ -17,6 +17,6 @@
   "persist": ".data",
   "checkver": "github",
   "autoupdate": {
-    "url": "https://github.com/zecarneiro/favorite-apps-tray/releases/download/v$version/favorite-apps-tray-{APP_VERSION}.zip"
+    "url": "https://github.com/zecarneiro/{APP_NAME}/releases/download/v$version/{APP_NAME}-{APP_VERSION}.zip"
   }
 }
