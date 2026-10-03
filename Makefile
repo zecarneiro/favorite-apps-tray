@@ -2,7 +2,7 @@ SHELL := /bin/bash
 
 # APP Info
 NAME := favorite-apps-tray
-APP_VERSION := 11.2.0
+APP_VERSION := 11.2.1
 DISPLAY_NAME := "Favorite Apps Tray"
 # Make file data
 GO := go
