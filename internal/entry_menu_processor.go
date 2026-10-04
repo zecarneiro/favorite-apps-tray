@@ -3,6 +3,7 @@ package internal
 import (
 	"favoriteappstray/internal/shared"
 	"fmt"
+	"golangutils/pkg/common"
 	"golangutils/pkg/file"
 	"golangutils/pkg/ui"
 )
@@ -46,9 +47,9 @@ func enableLogsProcessor() {
 }
 
 func aboutProcessor() {
-	message := "Name: " + shared.AppName
-	message += "\nVersion: " + shared.AppVersion
-	message += "\nRelease Date: " + shared.AppReleaseDate
-	message += "\nLog file located: " + shared.GetLogFile()
+	message := fmt.Sprintf("Name: %s", shared.AppName)
+	message += fmt.Sprintf("%sVersion: %s", common.Eol(), shared.AppVersion)
+	message += fmt.Sprintf("%sRelease Date: %s", common.Eol(), shared.AppReleaseDate)
+	message += fmt.Sprintf("%sLog file located: %s", common.Eol(), shared.GetLogFile())
 	shared.InfoDialog(message)
 }

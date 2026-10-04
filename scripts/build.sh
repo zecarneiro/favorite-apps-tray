@@ -7,7 +7,7 @@ BINARY_DIR="$ROOT_DIR/bin"
 GO_RELEASE_FLAGS="-s -w"
 GO_RELEASE_NO_CONSOLE_FLAGS=""
 
-echo "🚀 Building.."
+echo "🚀 Building..."
 if [[ "$NO_CONSOLE_WINDOW" == "1" ]]; then
 	GO_RELEASE_NO_CONSOLE_FLAGS="-H=windowsgui"
 fi
