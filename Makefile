@@ -2,14 +2,14 @@ SHELL := /bin/bash
 
 # APP Info
 NAME := favorite-apps-tray
-APP_VERSION := 11.2.3
+APP_VERSION := 11.2.4
 DISPLAY_NAME := "Favorite Apps Tray"
 # Make file data
 GO := go
 ROOT := $(CURDIR)
 SCRIPTS_DIR := $(ROOT)/scripts
 SO_TYPE := "linux"
-RELEASE := "1"
+RELEASE ?= "1"
 
 .PHONY: all build deploy check-deps clean help
 

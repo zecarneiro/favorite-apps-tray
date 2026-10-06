@@ -24,7 +24,6 @@ echo ">>> Generate Conf file"
 echo "NAME=${APP_NAME}" | tee -a "${CONF_FILE}"
 echo "DISPLAY_NAME=${APP_DISPLAY_NAME}" | tee -a "${CONF_FILE}"
 echo "VERSION=${APP_VERSION}" | tee -a "${CONF_FILE}"
-echo "RELEASE=true" | tee -a "${CONF_FILE}"
 echo "RELEASE_DATE=$(date '+%d/%m/%Y %H:%M:%S')" | tee -a "${CONF_FILE}"
 
 # Process Others
